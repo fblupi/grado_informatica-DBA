@@ -21,7 +21,7 @@
 * Cuando termine la instalación moverse a la carpeta bin dentro del directorio donde se ha instalado y ejecutar `sh Start-Magentix.sh` para iniciar Magentix. Cuando se haya terminado de trabajar con el servicio ejecutar `sh Stop-Magentix.sh`.
 * Para agregar las librerías al proyecto de NetBeans, crear una librería y añadirle el archivo `magentix2-2.01-jar-with-dependencies.zip` que se encuentra dentro de la carpeta lib del directorio donde se ha instalado Magentix.
 
-### Autores
+### Autor
 
 * Francisco Javier Bolívar Lupiáñez
 * Antonio Espinosa Jiménez
