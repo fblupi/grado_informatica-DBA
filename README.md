@@ -7,6 +7,7 @@
 ### Índice
 
 * Práctica 0: Toma de contacto con Magentix
+* Práctica 2: Rescue Bots
 
 ### Requisitos
 
