@@ -82,23 +82,67 @@ public class JSON {
 	return gps;
     }
     
+    /**
+     * Crea la cadena codificada para iniciar conexión, registrandose en un mapa 
+     * y con la petición de los sensores que se quieren activar.
+     * @param mapa Nombre del mapa al que se desea conectar.
+     * @return Devuelve la cadena que contiene codificado el Json
+     */
     public static String escribirLogin(String mapa){
-	String str ="";
+	JsonObject object = new JsonObject();
 	
-	return str;
+	object.add("command", "login");
+	object.add("world", mapa);
+	object.add("radar", "bot");
+	object.add("scanner", "bot");
+	object.add("gps", "bot");
+	
+	return object.toString();
     }
     
+    /**
+     * Crea la cadena codificada para realizar una acción
+     * @param action Acción que se desea realizar
+     * @return Devuelve la cadena que contiene codificado el Json
+     */
     public static String escribirAction(String action){
-	String str ="";
+	JsonObject object = new JsonObject();
 	
-	return str;
+	object.add("command", action);
+	object.add("key", password);
+	
+	return object.toString();
     }
     
+    /**
+     * Comprueba si ha tenido exito la conexión inicial a partir de una cadena codificada en Json
+     * @param json Cadena en Json
+     * @return true si tiene exito, false en caso contrario.
+     */
     public static boolean conexionLogin(String json){
-	return true;
+	boolean result;
+	if(json.contains("BAD_")){
+	    result = false;
+	}else{
+	    JsonObject object = Json.parse(json).asObject();
+	    password = object.getString("result", null);
+	    if(password == null){
+		result = false;
+	    }else{
+		result = true;
+	    }
+	}
+	return result;
     }
     
+    /**
+     * Comprueba si ha tenido exito una acción a partir de una cadena codificada en Json
+     * @param json Cadena en Json
+     * @return true si tiene exito, false en caso contrario.
+     */
     public static boolean exitoAction(String json){
-	return true;
+	boolean result = json.contains("OK");
+	
+	return result;
     }
 }
