@@ -69,27 +69,13 @@ public class RescueBot extends SingleAgent {
                     iniciarConversacion();
                     
                     break;
-                case ESCUCHAR:
-                    System.out.println("Agente("+this.getName()+") Esperando respuesta");
-                    boolean repetir=true;
-                    while (repetir)  {
-                        try {
-                            inbox = receiveACLMessage();
-                            if (inbox.getContent().equals("Respuesta")) { 
-                                status = INTERROGAR;
-                                repetir=false;
-                            }
-                        } catch (InterruptedException ex) {
-                            System.err.println("Agente("+this.getName()+") Error de comunicación");
-                            repetir=false;
-                            exit = true;
-                        }                        
-                    }
+                case ESTADO_RECIBIR_DATOS:
+                    faseRecibiendoDatos();
                     break;
                 case FIN:
                     // En realidad este estado es aparentemente innecesario
                     System.out.println("Agente("+this.getName()+") Terminando ejecución");                   
-                    exit = true;
+                    terminar = true;
                     break;
             }
         }
@@ -112,6 +98,7 @@ public class RescueBot extends SingleAgent {
     private void iniciarConversacion() {
         System.out.println("Agente pidiendo ID");            
         enviarMensaje(JSON.escribirLogin(mundoAVisitar));
+        estadoActual = ESTADO_RECIBIR_DATOS;
     }
     /**
      * @author Amanda Fernández
@@ -122,13 +109,32 @@ public class RescueBot extends SingleAgent {
     private void enviarMensaje(String contenido){
         outbox = new ACLMessage();
         outbox.setSender(this.getAid());
-        // Es necesario saber el nombre del agente al mandar
-        // un mensaje por primera vez. También se puede pasar por
-        // parámetro al constructor
         outbox.setReceiver(new AgentID(nombreControlador));
         outbox.setContent(contenido);
         System.out.println("Agente enviando mensaje");            
         this.send(outbox);
+    }
+    /**
+     * @author Amanda Fernández
+     * @author Francisco Javier Ortega
+     * @author Antonio Espinosa
+     */
+    private void faseRecibiendoDatos() {
+        System.out.println("Agente Esperando respuesta");
+        boolean recibiendo=true;
+        while (recibiendo)  {
+            try {
+                inbox = receiveACLMessage();
+                if (inbox.getContent().equals("Respuesta")) { 
+                    status = INTERROGAR;
+                    recibiendo=false;
+                }
+            } catch (InterruptedException ex) {
+                System.err.println("Agente Error de comunicación");
+                recibiendo=false;
+                terminar = true;
+            }                        
+        }
     }
     
 }
