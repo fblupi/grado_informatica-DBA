@@ -77,7 +77,10 @@ public class JSON {
 	int[] gps = new int[2];
 	
 	JsonObject object = Json.parse(json).asObject();
+	JsonObject gpsObject = object.get("gps").asObject();
 	
+	gps[0] = gpsObject.getInt("x", -1);
+	gps[1] = gpsObject.getInt("y", -1);
 	
 	return gps;
     }
