@@ -12,6 +12,9 @@ import static rescuebot.EstadosBot.*;
 /**
  *
  * @author José Guadix
+ * @author Amanda Fernández
+ * @author Francisco Javier Ortega
+ * @author Antonio Espinosa
  */
 public class RescueBot extends SingleAgent {
 
@@ -25,12 +28,23 @@ public class RescueBot extends SingleAgent {
     private boolean terminar;
     private ACLMessage inbox, outbox;
     private String mundoAVisitar;
-    
+    /**
+     * @author Amanda Fernández
+     * @author Francisco Javier Ortega
+     * @author Antonio Espinosa
+     * @param id
+     * @param mundoAVisitar
+     * @throws Exception 
+     */
     public RescueBot(AgentID id, String mundoAVisitar) throws Exception{
         super(id);
         this.mundoAVisitar = mundoAVisitar;        
     }
-    
+    /**
+     * @author Amanda Fernández
+     * @author Francisco Javier Ortega
+     * @author Antonio Espinosa
+     */
      @Override
     public void init()  {
         System.out.println("Bot Iniciandose ");
@@ -40,7 +54,11 @@ public class RescueBot extends SingleAgent {
         outbox = null;
         terminar = false;
     }
-    
+    /**
+     * @author Amanda Fernández
+     * @author Francisco Javier Ortega
+     * @author Antonio Espinosa
+     */
     @Override
     public void execute()  {
         String mensaje;
@@ -76,24 +94,31 @@ public class RescueBot extends SingleAgent {
             }
         }
     }
-    
+    /**
+     * @author Amanda Fernández
+     * @author Francisco Javier Ortega
+     * @author Antonio Espinosa
+     */
     @Override
     public void finalize()  {
         System.out.println("Agente cerrandose");       
         super.finalize();
     }
     /**
-     * @param args the command line arguments
+     * @author Amanda Fernández
+     * @author Francisco Javier Ortega
+     * @author Antonio Espinosa
      */
-    public static void main(String[] args) {
-	// TODO code application logic here
-    }
-
     private void iniciarConversacion() {
         System.out.println("Agente pidiendo ID");            
-        enviarMensaje(JSON.login(mundoAVisitar));
+        enviarMensaje(JSON.escribirLogin(mundoAVisitar));
     }
-    
+    /**
+     * @author Amanda Fernández
+     * @author Francisco Javier Ortega
+     * @author Antonio Espinosa
+     * @param contenido 
+     */
     private void enviarMensaje(String contenido){
         outbox = new ACLMessage();
         outbox.setSender(this.getAid());
