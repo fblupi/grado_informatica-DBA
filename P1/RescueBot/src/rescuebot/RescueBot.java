@@ -67,6 +67,7 @@ public class RescueBot extends SingleAgent {
         inbox = null;
         outbox = null;
         terminar = false;
+        
     }
     
     /**
