@@ -1,5 +1,5 @@
 
-package rescuebot;
+package practica2;
 
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;

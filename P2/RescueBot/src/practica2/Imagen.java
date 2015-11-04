@@ -1,4 +1,4 @@
-package rescuebot;
+package practica2;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

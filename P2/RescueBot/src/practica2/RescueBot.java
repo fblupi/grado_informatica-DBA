@@ -3,14 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package rescuebot;
+package practica2;
 
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.time.Instant;
 import java.util.Date;
-import static rescuebot.EstadosBot.*;
+import static practica2.EstadosBot.*;
 
 /**
  * @author Francisco Javier Bolívar
@@ -43,6 +43,8 @@ public class RescueBot extends SingleAgent {
     private String mundoAVisitar;
     private Imagen imagen;
     private boolean conectando;
+    private int pasos = 0;
+    private long tiempoInicio;
 
     /**
      * @author Amanda Fernández
@@ -73,6 +75,7 @@ public class RescueBot extends SingleAgent {
 	inicializarMapa();
 	imagen = new Imagen(mapa);
 	imagen.mostrar();
+        tiempoInicio = System.currentTimeMillis();
     }
 
     /**
@@ -120,6 +123,8 @@ public class RescueBot extends SingleAgent {
 	imagen.guardarPNG(mundoAVisitar + " - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
 	imagen.cerrar();
 	super.finalize();
+        System.out.println("Pasos que ha dado el agente: " + pasos);
+        System.out.println("Tiempo de ejecución del mapa: "+ ( System.currentTimeMillis() - tiempoInicio )/1000 +" Segundos");
     }
 
     /**
@@ -195,6 +200,7 @@ public class RescueBot extends SingleAgent {
 	if (decision.equals("logout")) {
 	    estadoActual = ESTADO_FINAL;
 	} else {
+            pasos++;
 	    nivelBateria--;
 	    estadoActual = ESTADO_RECIBIR_DATOS;
 	}
@@ -326,5 +332,5 @@ public class RescueBot extends SingleAgent {
 	enviarMensaje(JSON.escribirAction("logout"));
 	estadoActual = ESTADO_FINAL;
     }
-
+    
 }

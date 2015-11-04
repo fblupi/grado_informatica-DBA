@@ -1,5 +1,5 @@
 
-package rescuebot;
+package practica2;
 
 /**
  *
