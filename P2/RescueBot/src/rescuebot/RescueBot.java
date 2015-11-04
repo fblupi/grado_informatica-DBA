@@ -89,8 +89,6 @@ public class RescueBot extends SingleAgent {
     public void execute() {
 	System.out.println("Agente en ejecución");
 	while (!terminar) {
-	    imagen.guardarPNG(mundoAVisitar + " - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
-	    
 	    switch (estadoActual) {
 		case ESTADO_INICIAL:
 		    iniciarConversacion();
@@ -107,8 +105,6 @@ public class RescueBot extends SingleAgent {
 		case ESTADO_FINAL:
 		    // En realidad este estado es aparentemente innecesario
 		    System.out.println("Agente(" + this.getName() + ") Terminando ejecución");
-		    imagen.guardarPNG(mundoAVisitar + " final - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
-		    imagen.cerrar();
 		    terminar = true;
 		    break;
 		case ESTADO_ENCONTRADO:
@@ -126,6 +122,8 @@ public class RescueBot extends SingleAgent {
     @Override
     public void finalize() {
 	System.out.println("Agente cerrandose");
+	imagen.guardarPNG(mundoAVisitar + " - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
+	imagen.cerrar();
 	super.finalize();
     }
 
@@ -172,8 +170,6 @@ public class RescueBot extends SingleAgent {
 	} else if (nivelBateria < 10) {
 	    estadoActual = ESTADO_REPOSTAR;
 	} else {
-	    actualizarMapa();
-	    imagen.actualizarMapa(mapa);
 	    estadoActual = ESTADO_MOVER;
 	}
     }
@@ -185,11 +181,14 @@ public class RescueBot extends SingleAgent {
     }
 
     private void faseMover() {
+	actualizarMapa();
+	imagen.actualizarMapa(mapa);
 	String decision = elegirMovimiento();
 	enviarMensaje(JSON.escribirAction(decision));
 	if (decision.equals("logout")) {
 	    estadoActual = ESTADO_FINAL;
 	} else {
+	    nivelBateria--;
 	    estadoActual = ESTADO_RECIBIR_DATOS;
 	}
     }
@@ -267,23 +266,23 @@ public class RescueBot extends SingleAgent {
 	// Busca el movimiento
 	for (int j = 1; j < 4; j++) {
 	    for (int i = 1; i < 4; i++) {
-		System.out.print("ultimoGPS[0] + i - 2: " + (ultimoGPS[0] + i - 2) + ", ultimoGPS[1] + j - 2: " + (ultimoGPS[1] + j - 2));
-		System.out.print(" -> " + distanciaMin + " -> " + ultimoScanner[j][i]);
+//		System.out.print("ultimoGPS[0] + i - 2: " + (ultimoGPS[0] + i - 2) + ", ultimoGPS[1] + j - 2: " + (ultimoGPS[1] + j - 2));
+//		System.out.print(" -> " + distanciaMin + " -> " + ultimoScanner[j][i]);
 		if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
 			&& ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
-		    System.out.print(" -> " + mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2]);
+//		    System.out.print(" -> " + mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2]);
 		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
 			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
 //		    System.out.println("ultimoGPS[0] + i: " + (ultimoGPS[0] + i) + ", ultimoGPS[1] + j: " + (ultimoGPS[1] + j));
 
 			distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
-			decision = parserCoordMov(j,i);    // Actualiza el movimiento de la casilla más cercana
+			decision = parserCoordMov(j, i);    // Actualiza el movimiento de la casilla más cercana
 		    }
 		}
-		System.out.println("");
+//		System.out.println("");
 	    }
 	}
-	System.out.println(decision + ": " + distanciaMin);
+//	System.out.println(decision + ": " + distanciaMin);
 	return decision;
     }
 
