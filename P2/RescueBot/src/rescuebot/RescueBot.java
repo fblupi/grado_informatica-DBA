@@ -34,7 +34,7 @@ public class RescueBot extends SingleAgent {
     private String token;
     private int[] ultimoGPS = new int[2];
     private int[][] ultimoRadar = new int[5][5];
-    private int[][] ultimoScanner = new int[5][5];
+    private float[][] ultimoScanner = new float[5][5];
     private int[][] mapa = new int[TAMANO_MAPA][TAMANO_MAPA];
     private boolean terminar;
     private ACLMessage inbox, outbox;
@@ -194,9 +194,10 @@ public class RescueBot extends SingleAgent {
      * @return movimiento elegido
      */
     public String elegirMovimiento() {
-        String decision = new String();
+        String decision = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
         float distanciaMin = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
 
+        // Busca el movimiento
         for (int i = 1; i < 4; i++) {
             for (int j = 1; j < 4; j++) {
                 if (ultimoScanner[i][j] < distanciaMin  // La distancia es menor que la menor almacenada
