@@ -9,6 +9,7 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import static rescuebot.EstadosBot.*;
+
 /**
  *
  * @author Francisco Javier Bolívar
@@ -88,13 +89,13 @@ public class RescueBot extends SingleAgent {
                     faseRecibiendoDatos();
                     break;
                 case ESTADO_RECIBIR_RESPUESTA:
-                    
+                    faseProcesandoDatos();
                     break;
                 case ESTADO_REPOSTAR:
-                    
+                    faseRepostar();
                     break;
                 case ESTADO_MOVER:
-                    
+                    faseMover();
                     break;
                 case ESTADO_FINAL:
                     // En realidad este estado es aparentemente innecesario
@@ -102,7 +103,7 @@ public class RescueBot extends SingleAgent {
                     terminar = true;
                     break;
                 case ESTADO_ENCONTRADO:
-                    
+                    faseObjetivoEncontrado();
                     break;
             }
         }
@@ -125,7 +126,6 @@ public class RescueBot extends SingleAgent {
      * @author Antonio Espinosa
      */
     private void iniciarConversacion() {
-        System.out.println("Agente pidiendo ID");            
         enviarMensaje(JSON.escribirLogin(mundoAVisitar));
         estadoActual = ESTADO_RECIBIR_DATOS;
     }
@@ -253,6 +253,24 @@ public class RescueBot extends SingleAgent {
             else
               return "moveSE";  // (3, 3)  
         }
+    }
+    
+    private void faseProcesandoDatos() {
+        
+    }
+
+    private void faseRepostar() {
+        JSON.escribirAction("refuel");
+    }
+
+    private void faseMover() {
+        
+    }
+
+    private void faseObjetivoEncontrado() {
+        System.out.println("¡He encontrado el objetivo!");
+        //Imagen.guardarPNG("mapa");
+        JSON.escribirAction("logout");
     }
     
 }
