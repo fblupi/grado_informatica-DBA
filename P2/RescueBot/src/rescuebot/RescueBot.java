@@ -87,10 +87,22 @@ public class RescueBot extends SingleAgent {
                 case ESTADO_RECIBIR_DATOS:
                     faseRecibiendoDatos();
                     break;
+                case ESTADO_RECIBIR_RESPUESTA:
+                    
+                    break;
+                case ESTADO_REPOSTAR:
+                    
+                    break;
+                case ESTADO_MOVER:
+                    
+                    break;
                 case ESTADO_FINAL:
                     // En realidad este estado es aparentemente innecesario
                     System.out.println("Agente("+this.getName()+") Terminando ejecución");                   
                     terminar = true;
+                    break;
+                case ESTADO_ENCONTRADO:
+                    
                     break;
             }
         }
