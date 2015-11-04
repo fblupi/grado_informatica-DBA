@@ -5,25 +5,20 @@
  */
 package rescuebot;
 
-import TraceDaddy.Daddy;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.time.Instant;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import static rescuebot.EstadosBot.*;
 
 /**
- *
  * @author Francisco Javier Bolívar
  * @author Antonio Espinosa
  * @author Amanda Fernández
  * @author José Guadix
  * @author Antonio David López
  * @author Francisco Javier Ortega
- *
  */
 public class RescueBot extends SingleAgent {
 
@@ -33,6 +28,7 @@ public class RescueBot extends SingleAgent {
     private final int RECORRIDA = 3;
     private final int DESCONOCIDA = 4;
     private final int TAMANO_MAPA = 500;
+    private final int NUM_SENSORES = 3;
 
     private EstadosBot estadoActual;
     private String nombreControlador;
@@ -45,7 +41,6 @@ public class RescueBot extends SingleAgent {
     private boolean terminar;
     private ACLMessage inbox, outbox;
     private String mundoAVisitar;
-    private int NUM_SENSORES = 3;
     private Imagen imagen;
     private boolean conectando;
 
@@ -139,6 +134,10 @@ public class RescueBot extends SingleAgent {
 	estadoActual = ESTADO_RECIBIR_DATOS;
     }
 
+    /**
+     * @author José Guadix
+     * @author Francisco Javier Ortega
+     */
     private void faseRecibiendoDatos() {
 	System.out.println("Agente Esperando respuesta");
 	boolean exito = true;
@@ -173,13 +172,21 @@ public class RescueBot extends SingleAgent {
 	    estadoActual = ESTADO_MOVER;
 	}
     }
-
+    
+    /**
+     * @author José Guadix
+     * @author Francisco Javier Ortega
+     */
     private void faseRepostar() {
 	enviarMensaje(JSON.escribirAction("refuel"));
 	nivelBateria = 100;
 	estadoActual = ESTADO_RECIBIR_DATOS;
     }
-
+    
+    /**
+     * @author José Guadix
+     * @author Francisco Javier Ortega
+     */
     private void faseMover() {
 	actualizarMapa();
 	imagen.actualizarMapa(mapa);
@@ -234,20 +241,14 @@ public class RescueBot extends SingleAgent {
 	mapa[ultimoGPS[0]][ultimoGPS[1]] = RECORRIDA;   // Guarda posición actual como posición por donde ha pasado
 	for (int x = 0, j = -2; x < 5; x++, j++) {      // x: recorre el radar, i: recorre mapa desde la posición actual
 	    for (int y = 0, i = -2; y < 5; y++, i++) {  // y: recorre el radar, j: recorre mapa desde la posición actual
-//		System.out.println("x: " + x + "y: " + y + "i: " + i + "j: " + j);
-//		System.out.print("ultimoGPS[0] +i: " + (ultimoGPS[0]+i) + " ultimoGPS[1] + j: " + (ultimoGPS[1] + j));
 		if ((ultimoGPS[0] + i >= 0 && ultimoGPS[0] + i < TAMANO_MAPA)
 			&& (ultimoGPS[1] + j >= 0 && ultimoGPS[1] + j < TAMANO_MAPA)) { // No se sale del límite
-//		    System.out.print(" -> entra v: " + ultimoRadar[x][y]);
-		    if (mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] == DESCONOCIDA) // No machaca pasos anteriores
-		    {
+		    if (mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] == DESCONOCIDA) { // No machaca pasos anteriores
+		   
 			mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] = ultimoRadar[x][y];   // Actualiza casilla con el valor recibido del radar
 		    }
-//		    System.out.print(mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] + " ");
 		}
-//		System.out.println("");
 	    }
-//	    System.out.println("");
 	}
     }
 
@@ -259,30 +260,25 @@ public class RescueBot extends SingleAgent {
      * @author Antonio David López
      * @return movimiento elegido
      */
-    public String elegirMovimiento() {
+    private String elegirMovimiento() {
 	String decision = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
 	float distanciaMin = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
 
 	// Busca el movimiento
 	for (int j = 1; j < 4; j++) {
 	    for (int i = 1; i < 4; i++) {
-//		System.out.print("ultimoGPS[0] + i - 2: " + (ultimoGPS[0] + i - 2) + ", ultimoGPS[1] + j - 2: " + (ultimoGPS[1] + j - 2));
-//		System.out.print(" -> " + distanciaMin + " -> " + ultimoScanner[j][i]);
 		if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
 			&& ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
-//		    System.out.print(" -> " + mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2]);
 		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
 			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
-//		    System.out.println("ultimoGPS[0] + i: " + (ultimoGPS[0] + i) + ", ultimoGPS[1] + j: " + (ultimoGPS[1] + j));
 
 			distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
 			decision = parserCoordMov(j, i);    // Actualiza el movimiento de la casilla más cercana
 		    }
 		}
-//		System.out.println("");
 	    }
 	}
-//	System.out.println(decision + ": " + distanciaMin);
+        
 	return decision;
     }
 
@@ -295,7 +291,7 @@ public class RescueBot extends SingleAgent {
      * @param y coordenada y hacia donde se mueve
      * @return movimiento elegido
      */
-    public String parserCoordMov(int x, int y) {
+    private String parserCoordMov(int x, int y) {
 	if (x == 1) {
 	    if (y == 1) {
 		return "moveNW";  // (1, 1)
@@ -320,7 +316,11 @@ public class RescueBot extends SingleAgent {
 	    }
 	}
     }
-
+    
+    /**
+     * @author José Guadix
+     * @author Francisco Javier Ortega
+     */
     private void faseObjetivoEncontrado() {
 	System.out.println("¡He encontrado el objetivo!");
 	enviarMensaje(JSON.escribirAction("logout"));
