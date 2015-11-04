@@ -123,8 +123,7 @@ public class RescueBot extends SingleAgent {
 	imagen.guardarPNG(mundoAVisitar + " - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
 	imagen.cerrar();
 	super.finalize();
-        System.out.println("Pasos que ha dado el agente: " + pasos);
-        System.out.println("Tiempo de ejecución del mapa: "+ ( System.currentTimeMillis() - tiempoInicio )/1000 +" Segundos");
+        mostrarResumen();
     }
 
     /**
@@ -333,4 +332,15 @@ public class RescueBot extends SingleAgent {
 	estadoActual = ESTADO_FINAL;
     }
     
+    /**
+     * @author Antonio Espinosa
+     */
+    private void mostrarResumen() {
+        int segundosTotal = (int) (System.currentTimeMillis() - tiempoInicio )/1000;
+        int minutos = segundosTotal / 60;  
+        int segundos = segundosTotal - (minutos * 60); 
+        
+        System.out.println("Pasos que ha dado el agente: " + pasos);
+        System.out.println("Tiempo de ejecución del mapa: "+ minutos + " Minutos " + segundos + " Segundos");
+    }    
 }
