@@ -90,11 +90,7 @@ public class RescueBot extends SingleAgent {
 	System.out.println("Agente en ejecución");
 	while (!terminar) {
 	    imagen.guardarPNG(mundoAVisitar + " - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
-	    try {
-		Thread.sleep(100);
-	    } catch (InterruptedException ex) {
-		Logger.getLogger(RescueBot.class.getName()).log(Level.SEVERE, null, ex);
-	    }
+	    
 	    switch (estadoActual) {
 		case ESTADO_INICIAL:
 		    iniciarConversacion();
@@ -240,17 +236,17 @@ public class RescueBot extends SingleAgent {
 	for (int x = 0, j = -2; x < 5; x++, j++) {      // x: recorre el radar, i: recorre mapa desde la posición actual
 	    for (int y = 0, i = -2; y < 5; y++, i++) {  // y: recorre el radar, j: recorre mapa desde la posición actual
 //		System.out.println("x: " + x + "y: " + y + "i: " + i + "j: " + j);
-		System.out.print("ultimoGPS[0] +i: " + (ultimoGPS[0]+i) + " ultimoGPS[1] + j: " + (ultimoGPS[1] + j));
+//		System.out.print("ultimoGPS[0] +i: " + (ultimoGPS[0]+i) + " ultimoGPS[1] + j: " + (ultimoGPS[1] + j));
 		if ((ultimoGPS[0] + i >= 0 && ultimoGPS[0] + i < TAMANO_MAPA)
 			&& (ultimoGPS[1] + j >= 0 && ultimoGPS[1] + j < TAMANO_MAPA)) { // No se sale del límite
-		    System.out.print(" -> entra v: " + ultimoRadar[x][y]);
+//		    System.out.print(" -> entra v: " + ultimoRadar[x][y]);
 		    if (mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] == DESCONOCIDA) // No machaca pasos anteriores
 		    {
 			mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] = ultimoRadar[x][y];   // Actualiza casilla con el valor recibido del radar
 		    }
 //		    System.out.print(mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] + " ");
 		}
-		System.out.println("");
+//		System.out.println("");
 	    }
 //	    System.out.println("");
 	}
@@ -271,17 +267,20 @@ public class RescueBot extends SingleAgent {
 	// Busca el movimiento
 	for (int j = 1; j < 4; j++) {
 	    for (int i = 1; i < 4; i++) {
-//		System.out.print("ultimoGPS[0] + i - 1: " + (ultimoGPS[0] + i - 1) + ", ultimoGPS[1] + j - 1: " + (ultimoGPS[1] + j - 1));
-//		System.out.println(" -> " + distanciaMin + " -> " + ultimoScanner[i][j]);
-		if (ultimoScanner[i][j] < distanciaMin // La distancia es menor que la menor almacenada
-//			&& ultimoGPS[1] + j - 1 >= 0 && ultimoGPS[0] + i - 1 >= 0
-			&& mapa[ultimoGPS[0] + i - 1][ultimoGPS[1] + j - 1] != OBSTACULO // No hay obstáculo
-			&& mapa[ultimoGPS[0] + i - 1][ultimoGPS[1] + j - 1] != RECORRIDA) { // No se ha recorrido previamente
+		System.out.print("ultimoGPS[0] + i - 2: " + (ultimoGPS[0] + i - 2) + ", ultimoGPS[1] + j - 2: " + (ultimoGPS[1] + j - 2));
+		System.out.print(" -> " + distanciaMin + " -> " + ultimoScanner[j][i]);
+		if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
+			&& ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
+		    System.out.print(" -> " + mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2]);
+		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
+			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
 //		    System.out.println("ultimoGPS[0] + i: " + (ultimoGPS[0] + i) + ", ultimoGPS[1] + j: " + (ultimoGPS[1] + j));
-		   
-		    distanciaMin = ultimoScanner[i][j]; // Actualiza la distancia de la casilla más cercana
-		    decision = parserCoordMov(i, j);    // Actualiza el movimiento de la casilla más cercana
+
+			distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
+			decision = parserCoordMov(j,i);    // Actualiza el movimiento de la casilla más cercana
+		    }
 		}
+		System.out.println("");
 	    }
 	}
 	System.out.println(decision + ": " + distanciaMin);
@@ -297,7 +296,7 @@ public class RescueBot extends SingleAgent {
      * @param y coordenada y hacia donde se mueve
      * @return movimiento elegido
      */
-    public String parserCoordMov(int y, int x) {
+    public String parserCoordMov(int x, int y) {
 	if (x == 1) {
 	    if (y == 1) {
 		return "moveNW";  // (1, 1)
