@@ -9,7 +9,7 @@ import javax.swing.ImageIcon;
 
 /**
  * 
- * @author Amanda Fernandez
+ * @author Amanda Fernández
  * @author José Guadix
  */
 public class Imagen extends javax.swing.JFrame {
