@@ -8,7 +8,7 @@ package rescuebot;
 import java.util.Random;
 
 /**
- *
+ * 
  * @author José Guadix
  */
 public class mainImagen {
