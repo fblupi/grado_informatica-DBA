@@ -15,7 +15,7 @@ import javax.swing.ImageIcon;
 public class Imagen extends javax.swing.JFrame {
     
     private final int LIBRE = 0;
-    private final int MURO = 1;
+    private final int OBSTACULO = 1;
     private final int OBJETIVO = 2;
     private final int RECORRIDO = 3;
     private final int DESCONOCIDO = 4;
@@ -65,7 +65,7 @@ public class Imagen extends javax.swing.JFrame {
 		    case LIBRE:
 			color = Color.WHITE;
 			break;
-		    case MURO:
+		    case OBSTACULO:
 			color = Color.BLACK;
 			break;
 		    case OBJETIVO:
