@@ -25,9 +25,10 @@ public class Imagen extends javax.swing.JFrame {
     private BufferedImage bufferedImage;
     private javax.swing.JLabel labelMapa;
 
-    public Imagen(int[][] mapa) {
+    public Imagen(int[][] mapa, String mundo) {
 	initComponents();
 	setLocationRelativeTo(null);
+	setTitle("Traza de recorrido - " + mundo);
 	setSize(TAM + 50, TAM + 70);
 	labelMapa.setSize(TAM, TAM);
 	bufferedImage = new BufferedImage(TAM, TAM, BufferedImage.TYPE_INT_RGB);

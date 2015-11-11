@@ -34,18 +34,20 @@ public class RescueBot extends SingleAgent {
     private EstadosBot estadoActual;
     private String nombreControlador;
     private int nivelBateria = 0;
-    private String token;
     private int[] ultimoGPS = new int[2];
     private int[][] ultimoRadar = new int[5][5];
     private float[][] ultimoScanner = new float[5][5];
     private int[][] mapa = new int[TAMANO_MAPA][TAMANO_MAPA];
     private boolean terminar;
     private ACLMessage inbox, outbox;
-    private String mundoAVisitar;
+    private final String mundoAVisitar;
     private Imagen imagen;
     private boolean conectando;
     private int pasos = 0;
     private long tiempoInicio;
+    private boolean moviendoPorPared;
+    private int[] miPrimeraPosPared = new int[2];
+    private float miPrimerScannerPared;
 
     /**
      * @author Amanda Fernández
@@ -74,9 +76,10 @@ public class RescueBot extends SingleAgent {
 	outbox = null;
 	terminar = false;
 	inicializarMapa();
-	imagen = new Imagen(mapa);
+	imagen = new Imagen(mapa, mundoAVisitar);
 	imagen.mostrar();
-        tiempoInicio = System.currentTimeMillis();
+	moviendoPorPared = false;
+	tiempoInicio = System.currentTimeMillis();
     }
 
     /**
@@ -121,12 +124,12 @@ public class RescueBot extends SingleAgent {
     @Override
     public void finalize() {
 	System.out.println("Agente cerrandose");
-        mapa[ultimoGPS[0]][ultimoGPS[1]]= ULT_POSICION;
-        imagen.actualizarMapa(mapa);
+	mapa[ultimoGPS[0]][ultimoGPS[1]] = ULT_POSICION;
+	imagen.actualizarMapa(mapa);
 	imagen.guardarPNG(mundoAVisitar + " - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
 	imagen.cerrar();
 	super.finalize();
-        mostrarResumen();
+	mostrarResumen();
     }
 
     /**
@@ -179,7 +182,7 @@ public class RescueBot extends SingleAgent {
 	    estadoActual = ESTADO_MOVER;
 	}
     }
-    
+
     /**
      * @author José Guadix
      * @author Francisco Javier Ortega
@@ -189,7 +192,7 @@ public class RescueBot extends SingleAgent {
 	nivelBateria = 100;
 	estadoActual = ESTADO_RECIBIR_DATOS;
     }
-    
+
     /**
      * @author José Guadix
      * @author Francisco Javier Ortega
@@ -197,16 +200,88 @@ public class RescueBot extends SingleAgent {
     private void faseMover() {
 	actualizarMapa();
 	imagen.actualizarMapa(mapa);
-	String decision = elegirMovimiento();
+	String decision;
+	int[] pos = posicionOptima();
+	float scannerOptimo = ultimoScanner[pos[0]][pos[1]];
+	System.out.println("\tScannerOptimo: " + scannerOptimo + " primero: " + miPrimerScannerPared);
+	System.out.println("\tposicionOptima: " + pos[0] + ", " + pos[1]);
+	System.out.println("\tposicionPared: " + miPrimeraPosPared[0] + ", " + miPrimeraPosPared[1]);
+
+	System.out.println("\tmoviendoPared: " + moviendoPorPared);
+
+	if (moviendoPorPared) {
+	    if (scannerOptimo < miPrimerScannerPared) {
+		moviendoPorPared = false;
+	    }
+	    System.out.print("Moviendo por pared: ");
+	    decision = elegirMovimientoPared();
+	    System.out.println(decision);
+	    if (decision.equals("logout")) {
+		decision = elegirMovimiento();
+		moviendoPorPared = false;
+	    }
+	} else {
+	    if (optimaEsPared(pos)) {
+		if (!moviendoPorPared) {
+		    moviendoPorPared = true;
+		    miPrimeraPosPared = ultimoGPS;
+		    miPrimerScannerPared = scannerOptimo;
+		}
+	    } else {
+		moviendoPorPared = false;
+	    }
+	    decision = elegirMovimiento();
+	}
 	enviarMensaje(JSON.escribirAction(decision));
 	if (decision.equals("logout")) {
 	    estadoActual = ESTADO_FINAL;
-            
 	} else {
-            pasos++;
+	    pasos++;
 	    nivelBateria--;
 	    estadoActual = ESTADO_RECIBIR_DATOS;
 	}
+    }
+
+    private boolean tieneParedCerca(String mov) {
+	int x = 0, y = 0;
+	switch (mov) {
+	    case "moveNW":
+		x = -1;
+		y = -1;
+		break;
+	    case "moveN":
+		x = -1;
+		break;
+	    case "moveNE":
+		x = -1;
+		y = 1;
+		break;
+	    case "moveW":
+		y = -1;
+		break;
+	    case "moveE":
+		y = 1;
+		break;
+	    case "moveSW":
+		x = 1;
+		y = -1;
+		break;
+	    case "moveS":
+		x = 1;
+		break;
+	    case "moveSE":
+		x = 1;
+		y = 1;
+		break;
+	}
+	for (int i = 2 + x - 1; i < 2 + x - 1 + 3; i++) {
+	    for (int j = 2 + y - 1; j < 2 + y - 1 + 3; j++) {
+		if (i >= 0 && j >= 0 && i < 5 && j < 5 && ultimoRadar[i][j] == OBSTACULO) {
+		    return true;
+		}
+	    }
+	}
+	return false;
     }
 
     /**
@@ -253,12 +328,57 @@ public class RescueBot extends SingleAgent {
 		if ((ultimoGPS[0] + i >= 0 && ultimoGPS[0] + i < TAMANO_MAPA)
 			&& (ultimoGPS[1] + j >= 0 && ultimoGPS[1] + j < TAMANO_MAPA)) { // No se sale del límite
 		    if (mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] == DESCONOCIDA) { // No machaca pasos anteriores
-		   
+
 			mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] = ultimoRadar[x][y];   // Actualiza casilla con el valor recibido del radar
 		    }
 		}
 	    }
 	}
+    }
+
+    int[] posicionOptima() {
+	int[] optima = new int[2];
+	float floatMin = Float.MAX_VALUE;
+	for (int i = 1; i < 4; i++) {
+	    for (int j = 1; j < 4; j++) {
+		if (ultimoScanner[i][j] < floatMin) {
+		    floatMin = ultimoScanner[i][j];
+		    optima[0] = i;
+		    optima[1] = j;
+		}
+	    }
+	}
+	return optima;
+    }
+
+    boolean optimaEsPared(int[] pos) {
+	return ultimoRadar[pos[0]][pos[1]] == OBSTACULO;
+    }
+
+    private String elegirMovimientoPared() {
+	String decision = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
+	String decisionLocal;
+	float distanciaMin = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
+
+	// Busca el movimiento
+	for (int j = 1; j < 4; j++) {
+	    for (int i = 1; i < 4; i++) {
+		if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
+			&& ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
+		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
+			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
+
+			decisionLocal = parserCoordMov(j, i);    // Actualiza el movimiento de la casilla más cercana
+			if (tieneParedCerca(decisionLocal)) {
+			    decision = decisionLocal;
+			    distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
+			}
+		    }
+		}
+	    }
+	}
+
+	return decision;
     }
 
     /**
@@ -281,13 +401,13 @@ public class RescueBot extends SingleAgent {
 		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
 			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
 
+			decision = parserCoordMov(j, i);
 			distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
-			decision = parserCoordMov(j, i);    // Actualiza el movimiento de la casilla más cercana
 		    }
 		}
 	    }
 	}
-        
+
 	return decision;
     }
 
@@ -325,7 +445,7 @@ public class RescueBot extends SingleAgent {
 	    }
 	}
     }
-    
+
     /**
      * @author José Guadix
      * @author Francisco Javier Ortega
@@ -335,16 +455,16 @@ public class RescueBot extends SingleAgent {
 	enviarMensaje(JSON.escribirAction("logout"));
 	estadoActual = ESTADO_FINAL;
     }
-    
+
     /**
      * @author Antonio Espinosa
      */
     private void mostrarResumen() {
-        int segundosTotal = (int) (System.currentTimeMillis() - tiempoInicio )/1000;
-        int minutos = segundosTotal / 60;  
-        int segundos = segundosTotal - (minutos * 60); 
-        
-        System.out.println("Pasos que ha dado el agente: " + pasos);
-        System.out.println("Tiempo de ejecución del mapa: "+ minutos + " Minutos " + segundos + " Segundos");
-    }    
+	int segundosTotal = (int) (System.currentTimeMillis() - tiempoInicio) / 1000;
+	int minutos = segundosTotal / 60;
+	int segundos = segundosTotal - (minutos * 60);
+
+	System.out.println("Pasos que ha dado el agente: " + pasos);
+	System.out.println("Tiempo de ejecución del mapa: " + minutos + " Minutos " + segundos + " Segundos");
+    }
 }
