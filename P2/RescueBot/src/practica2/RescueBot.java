@@ -29,6 +29,7 @@ public class RescueBot extends SingleAgent {
     private final int DESCONOCIDA = 4;
     private final int TAMANO_MAPA = 500;
     private final int NUM_SENSORES = 3;
+    private final int ULT_POSICION = 5;
 
     private EstadosBot estadoActual;
     private String nombreControlador;
@@ -120,6 +121,8 @@ public class RescueBot extends SingleAgent {
     @Override
     public void finalize() {
 	System.out.println("Agente cerrandose");
+        mapa[ultimoGPS[0]][ultimoGPS[1]]= ULT_POSICION;
+        imagen.actualizarMapa(mapa);
 	imagen.guardarPNG(mundoAVisitar + " - " + Date.from(Instant.now()).toString().replace(":", "-") + ".png");
 	imagen.cerrar();
 	super.finalize();
@@ -198,6 +201,7 @@ public class RescueBot extends SingleAgent {
 	enviarMensaje(JSON.escribirAction(decision));
 	if (decision.equals("logout")) {
 	    estadoActual = ESTADO_FINAL;
+            
 	} else {
             pasos++;
 	    nivelBateria--;

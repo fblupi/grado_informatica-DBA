@@ -19,6 +19,7 @@ public class Imagen extends javax.swing.JFrame {
     private final int OBJETIVO = 2;
     private final int RECORRIDO = 3;
     private final int DESCONOCIDO = 4;
+    private final int ULT_POSICION = 5;
 
     private final int TAM = 500;
     private BufferedImage bufferedImage;
@@ -77,6 +78,9 @@ public class Imagen extends javax.swing.JFrame {
 		    case DESCONOCIDO:
 			color = Color.LIGHT_GRAY;
 			break;
+                    case ULT_POSICION:
+                        color = Color.PINK;
+                        break;
 		    default:
 			color = Color.ORANGE;
 			break;
