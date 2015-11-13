@@ -48,6 +48,7 @@ public class RescueBot extends SingleAgent {
     private boolean moviendoPorPared;
     private int[] miPrimeraPosPared = new int[2];
     private float miPrimerScannerPared;
+    private long tiempoRecorriendoPared;
 
     /**
      * @author Amanda Fernández
@@ -225,6 +226,7 @@ public class RescueBot extends SingleAgent {
 		if (!moviendoPorPared) {
 		    moviendoPorPared = true;
 		    miPrimeraPosPared = ultimoGPS;
+                    tiempoRecorriendoPared = System.currentTimeMillis();
 		    miPrimerScannerPared = scannerOptimo;
 		}
 	    } else {
@@ -359,24 +361,29 @@ public class RescueBot extends SingleAgent {
 	String decision = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
 	String decisionLocal;
 	float distanciaMin = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
-
-	// Busca el movimiento
-	for (int j = 1; j < 4; j++) {
-	    for (int i = 1; i < 4; i++) {
-		if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
-			&& ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
-		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
-			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
-
-			decisionLocal = parserCoordMov(j, i);    // Actualiza el movimiento de la casilla más cercana
-			if (tieneParedCerca(decisionLocal)) {
-			    decision = decisionLocal;
-			    distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
-			}
-		    }
-		}
-	    }
-	}
+        
+        if(Math.abs(miPrimeraPosPared[0] - ultimoGPS[0]) > 2 
+                || Math.abs(miPrimeraPosPared[1] - ultimoGPS[1]) > 2 
+                && ((System.currentTimeMillis() - tiempoRecorriendoPared) / 1000) < 90){    
+            //Si la distancia entre el punto en el que encontré pared y el punto donde 
+            //me encuentro es > 2 y además no han pasado aún 90 segundos desde que pasé por aquí
+            //entonces busca el movimiento
+            for (int j = 1; j < 4; j++) {
+                for (int i = 1; i < 4; i++) {
+                    if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
+                            && ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
+                        if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
+                                && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
+                            decisionLocal = parserCoordMov(j, i);    // Actualiza el movimiento de la casilla más cercana
+                            if (tieneParedCerca(decisionLocal)) {
+                                decision = decisionLocal;
+                                distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 	return decision;
     }
