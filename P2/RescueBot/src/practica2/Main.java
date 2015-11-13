@@ -2,7 +2,6 @@ package practica2;
 
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
-import java.util.Scanner;
 
 /**
  * @author Amanda Fernández
@@ -13,8 +12,6 @@ public class Main {
 
     public static void main(String[] args) {
 	PedirMapa pedirMapa = new PedirMapa(null, true);
-
-	System.out.println("Introduce el mapa en el que quieres iniciar sesión");
 
 	String mundo = pedirMapa.getMapa();
 	if (mundo != null) {
