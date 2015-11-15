@@ -33,7 +33,7 @@ public class RescueBot extends SingleAgent {
     private final int TAMANO_MAPA = 500;
     private final int NUM_SENSORES = 3;
     private final int ULT_POSICION = 5;
-    private final int UMBRAL_ERROR = 500;
+    private final int UMBRAL_FINALIZAR = 500;
 
     private EstadosBot estadoActual;
     private String nombreControlador;
@@ -53,6 +53,7 @@ public class RescueBot extends SingleAgent {
     private int[] miPrimeraPosPared = new int[2];
     private float miPrimerScannerPared;
     private HashMap<Point, Integer> posicionesPared = new HashMap<Point, Integer>();
+    private HashMap<Integer, Point> posicionesALiberar = new HashMap<Integer, Point>();
 
     /**
      * @author Amanda Fernández
@@ -202,9 +203,9 @@ public class RescueBot extends SingleAgent {
 	for (Map.Entry<Point, Integer> entrySet : posicionesPared.entrySet()) {
 	    Point key = entrySet.getKey();
 	    Integer value = entrySet.getValue();
-	    if (Math.abs(ultimoGPS[0] +pos[0]-2 - key.x) == 0
-		    && Math.abs(ultimoGPS[1] +pos[1]-2 - key.y) == 0
-		    && pasos - value > UMBRAL_ERROR) {
+	    if (Math.abs(ultimoGPS[0] + pos[0] - 2 - key.x) == 0
+		    && Math.abs(ultimoGPS[1] + pos[1] - 2 - key.y) == 0
+		    && pasos - value > UMBRAL_FINALIZAR) {
 		return false;
 	    }
 	}
@@ -218,6 +219,7 @@ public class RescueBot extends SingleAgent {
     private void faseMover() {
 	actualizarMapa();
 	imagen.actualizarMapa(mapa);
+
 	String decision;
 	int[] pos = posicionOptima();
 	float scannerOptimo = ultimoScanner[pos[0]][pos[1]];
@@ -358,7 +360,7 @@ public class RescueBot extends SingleAgent {
 	}
     }
 
-    int[] posicionOptima() {
+    private int[] posicionOptima() {
 	int[] optima = new int[2];
 	float floatMin = Float.MAX_VALUE;
 	for (int i = 1; i < 4; i++) {
@@ -373,7 +375,7 @@ public class RescueBot extends SingleAgent {
 	return optima;
     }
 
-    boolean optimaEsPared(int[] pos) {
+    private boolean optimaEsPared(int[] pos) {
 	return ultimoRadar[pos[0]][pos[1]] == OBSTACULO;
     }
 
@@ -381,10 +383,7 @@ public class RescueBot extends SingleAgent {
 	String decision = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
 	String decisionLocal;
 	float distanciaMin = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
-    
-	//Si la distancia entre el punto en el que encontré pared y el punto donde 
-	//me encuentro es > 2 y además no han pasado aún 90 segundos desde que pasé por aquí
-	//entonces busca el movimiento
+
 	for (int j = 1; j < 4; j++) {
 	    for (int i = 1; i < 4; i++) {
 		if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
