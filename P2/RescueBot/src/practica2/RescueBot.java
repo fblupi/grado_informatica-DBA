@@ -34,6 +34,7 @@ public class RescueBot extends SingleAgent {
     private final int NUM_SENSORES = 3;
     private final int ULT_POSICION = 5;
     private final int UMBRAL_FINALIZAR = 500;
+    private final int UMBRAL_LIBERAR = 10;
 
     private EstadosBot estadoActual;
     private String nombreControlador;
@@ -219,35 +220,24 @@ public class RescueBot extends SingleAgent {
     private void faseMover() {
 	actualizarMapa();
 	imagen.actualizarMapa(mapa);
+	liberarPosiciones();
 
 	String decision;
 	int[] pos = posicionOptima();
 	float scannerOptimo = ultimoScanner[pos[0]][pos[1]];
-	System.out.println("\tScannerOptimo: " + scannerOptimo + " primero: " + miPrimerScannerPared);
-	System.out.println("\tposicionOptima: " + pos[0] + ", " + pos[1]);
-	System.out.println("\tposicionPared: " + miPrimeraPosPared[0] + ", " + miPrimeraPosPared[1]);
-
-	System.out.println("\tmoviendoPared: " + moviendoPorPared);
+	
 	if (!tieneSolucion(pos)) {
-	    System.out.println("La solución no está accesible");
+	    System.out.println("\nLa solución no está accesible");
 	    decision = "logout";
 	} else if (moviendoPorPared) {
-
 	    if (scannerOptimo < miPrimerScannerPared) {
 		moviendoPorPared = false;
 	    }
-	    System.out.print("Moviendo por pared: ");
-	    decision = elegirMovimientoPared();
-	    System.out.println(decision);
-	    if (decision.equals("logout")) {
-		decision = elegirMovimiento();
-		moviendoPorPared = false;
-	    }
+	    decision = elegirMovimiento();
 	} else {
 	    if (optimaEsPared(pos)) {
 		if (!moviendoPorPared) {
 		    moviendoPorPared = true;
-		    miPrimeraPosPared = ultimoGPS;
 		    miPrimerScannerPared = scannerOptimo;
 		    posicionesPared.put(new Point(ultimoGPS[0], ultimoGPS[1]), pasos);
 		}
@@ -266,40 +256,9 @@ public class RescueBot extends SingleAgent {
 	}
     }
 
-    private boolean tieneParedCerca(String mov) {
-	int x = 0, y = 0;
-	switch (mov) {
-	    case "moveNW":
-		x = -1;
-		y = -1;
-		break;
-	    case "moveN":
-		x = -1;
-		break;
-	    case "moveNE":
-		x = -1;
-		y = 1;
-		break;
-	    case "moveW":
-		y = -1;
-		break;
-	    case "moveE":
-		y = 1;
-		break;
-	    case "moveSW":
-		x = 1;
-		y = -1;
-		break;
-	    case "moveS":
-		x = 1;
-		break;
-	    case "moveSE":
-		x = 1;
-		y = 1;
-		break;
-	}
-	for (int i = 2 + x - 1; i < 2 + x - 1 + 3; i++) {
-	    for (int j = 2 + y - 1; j < 2 + y - 1 + 3; j++) {
+    private boolean tieneParedCerca(int x, int y) {
+	for (int i = x - 1; i <= x + 1; i++) {
+	    for (int j = y - 1; j <= y + 1; j++) {
 		if (i >= 0 && j >= 0 && i < 5 && j < 5 && ultimoRadar[i][j] == OBSTACULO) {
 		    return true;
 		}
@@ -346,14 +305,14 @@ public class RescueBot extends SingleAgent {
      * @author Antonio David López
      */
     private void actualizarMapa() {
-	mapa[ultimoGPS[0]][ultimoGPS[1]] = RECORRIDA;   // Guarda posición actual como posición por donde ha pasado
-	for (int x = 0, j = -2; x < 5; x++, j++) {      // x: recorre el radar, i: recorre mapa desde la posición actual
-	    for (int y = 0, i = -2; y < 5; y++, i++) {  // y: recorre el radar, j: recorre mapa desde la posición actual
-		if ((ultimoGPS[0] + i >= 0 && ultimoGPS[0] + i < TAMANO_MAPA)
-			&& (ultimoGPS[1] + j >= 0 && ultimoGPS[1] + j < TAMANO_MAPA)) { // No se sale del límite
-		    if (mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] == DESCONOCIDA) { // No machaca pasos anteriores
-
-			mapa[ultimoGPS[0] + i][ultimoGPS[1] + j] = ultimoRadar[x][y];   // Actualiza casilla con el valor recibido del radar
+	int posX = ultimoGPS[0];
+	int posY = ultimoGPS[1];
+	mapa[posX][posY] = RECORRIDA;   // Guarda posición actual como posición por donde ha pasado
+	for (int i = 0, y = posY - 2; i < 5; i++, y++) {      // x: recorre el radar, i: recorre mapa desde la posición actual
+	    for (int j = 0, x = posX - 2; j < 5; j++, x++) {  // y: recorre el radar, j: recorre mapa desde la posición actual
+		if ((x >= 0 && x < TAMANO_MAPA) && (y >= 0 && y < TAMANO_MAPA)) { // No se sale del límite
+		    if (mapa[x][y] == DESCONOCIDA) { // No machaca pasos anteriores
+			mapa[x][y] = ultimoRadar[i][j];   // Actualiza casilla con el valor recibido del radar
 		    }
 		}
 	    }
@@ -379,30 +338,6 @@ public class RescueBot extends SingleAgent {
 	return ultimoRadar[pos[0]][pos[1]] == OBSTACULO;
     }
 
-    private String elegirMovimientoPared() {
-	String decision = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
-	String decisionLocal;
-	float distanciaMin = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
-
-	for (int j = 1; j < 4; j++) {
-	    for (int i = 1; i < 4; i++) {
-		if (ultimoScanner[j][i] < distanciaMin // La distancia es menor que la menor almacenada
-			&& ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
-		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
-			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
-			decisionLocal = parserCoordMov(j, i);    // Actualiza el movimiento de la casilla más cercana
-			if (tieneParedCerca(decisionLocal)) {
-			    decision = decisionLocal;
-			    distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
-			}
-		    }
-		}
-	    }
-	}
-
-	return decision;
-    }
-
     /**
      * Elige hacia dónde quiere moverse en función de qué casilla adyascente al
      * bot está más cerca del objetivo y no es un obstáculo
@@ -412,25 +347,51 @@ public class RescueBot extends SingleAgent {
      * @return movimiento elegido
      */
     private String elegirMovimiento() {
-	String decision = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
-	float distanciaMin = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
+	String decisionPared = "logout"; // De primeras asumimos que no se puede mover a ningún sitio
+	String decisionNormal = "logout";
+	String decisionLocal;
+	float distanciaPared = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
+	float distanciaNormal = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
+	Point posActual = new Point(ultimoGPS[0], ultimoGPS[1]);
+	int posX = ultimoGPS[0];
+	int posY = ultimoGPS[1];
+	for (int i = 1; i < 4; i++) {
+	    for (int j = 1; j < 4; j++) {
+		if (posX + j - 2 >= 0 && posX + j - 2 < TAMANO_MAPA
+			&& posY + i - 2 >= 0 && posY + i - 2 < TAMANO_MAPA
+			&& mapa[posX + j - 2][posY + i - 2] != OBSTACULO // No hay obstáculo
+			&& mapa[posX + j - 2][posY + i - 2] != RECORRIDA // No se ha recorrido previamente
+			&& !voyAEncerrarme(i, j)) {
+		    decisionLocal = parserCoordMov(i, j);
+		    if (ultimoScanner[i][j] <= distanciaNormal) {
+			if (ultimoScanner[i][j] == distanciaNormal) {
+			    posicionesALiberar.put(pasos, posActual);
+			}
+			decisionNormal = decisionLocal;    // Actualiza el movimiento de la casilla más cercana
+			distanciaNormal = ultimoScanner[i][j];
+		    }
 
-	// Busca el movimiento
-	for (int j = 1; j < 4; j++) {
-	    for (int i = 1; i < 4; i++) {
-		if (ultimoScanner[j][i] <= distanciaMin // La distancia es menor o igual que la menor almacenada
-			&& ultimoGPS[0] + i - 2 >= 0 && ultimoGPS[1] + j - 2 >= 0) {
-		    if (mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != OBSTACULO // No hay obstáculo
-			    && mapa[ultimoGPS[0] + i - 2][ultimoGPS[1] + j - 2] != RECORRIDA) { // No se ha recorrido previamente
-
-			decision = parserCoordMov(j, i);
-			distanciaMin = ultimoScanner[j][i]; // Actualiza la distancia de la casilla más cercana
+		    if (moviendoPorPared && ultimoScanner[i][j] <= distanciaPared && tieneParedCerca(i, j)) {
+			if (ultimoScanner[i][j] == distanciaPared) {
+			    posicionesALiberar.put(pasos, posActual);
+			}
+			decisionPared = decisionLocal;
+			distanciaPared = ultimoScanner[i][j]; // Actualiza la distancia de la casilla más cercana
 		    }
 		}
 	    }
 	}
 
-	return decision;
+	if (moviendoPorPared) {
+	    if (decisionPared.equals("logout")) {
+		moviendoPorPared = false;
+		return decisionNormal;
+	    } else {
+		return decisionPared;
+	    }
+	} else {
+	    return decisionNormal;
+	}
     }
 
     /**
@@ -488,5 +449,33 @@ public class RescueBot extends SingleAgent {
 
 	System.out.println("Pasos que ha dado el agente: " + pasos);
 	System.out.println("Tiempo de ejecución del mapa: " + minutos + " Minutos " + segundos + " Segundos");
+    }
+
+    private boolean voyAEncerrarme(int y, int x) {
+	int posX = ultimoGPS[0] + x - 2;
+	int posY = ultimoGPS[1] + y - 2;
+	int cont = 0;
+	for (int i = -1; i <= 1; i++) {
+	    for (int j = -1; j <= 1; j++) {
+		if (posX + j >= 0 && posX + j < TAMANO_MAPA
+			&& posY + i >= 0 && posY + i < TAMANO_MAPA) {
+		    if (mapa[posX + j][posY + i] == LIBRE) {
+			cont++;
+		    } else if (mapa[posX + j][posY + i] == OBJETIVO) {
+			return false;
+		    }
+		}
+	    }
+	}
+	return cont <= 1;
+    }
+
+    private void liberarPosiciones() {
+	//intentamos borrar devolviendo la posición si no existe devuelve null si existe ponemos esa posicion a LIBRE
+	Point p = posicionesALiberar.remove(pasos - UMBRAL_LIBERAR);
+	if (p != null) {
+	    mapa[p.x][p.y] = LIBRE;
+	    posicionesPared.remove(p);//Eliminamos ese punto para que no termine la ejecución si intentamos pasar por el.
+	}
     }
 }
