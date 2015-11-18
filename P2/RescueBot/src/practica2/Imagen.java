@@ -24,7 +24,12 @@ public class Imagen extends javax.swing.JFrame {
     private final int TAM = 500;
     private BufferedImage bufferedImage;
     private javax.swing.JLabel labelMapa;
-
+    
+    /**
+     * Constructor donde se inicializa todos los valores de nuestro mapa
+     * @param mapa
+     * @param mundo 
+     */
     public Imagen(int[][] mapa, String mundo) {
 	initComponents();
 	setLocationRelativeTo(null);
@@ -37,7 +42,9 @@ public class Imagen extends javax.swing.JFrame {
 	labelMapa.setIcon(i);
     }
 
-    
+    /**
+     * Inicializamos los componentes de nuestra ventana
+     */
     private void initComponents() {
 
         labelMapa = new javax.swing.JLabel();
@@ -56,7 +63,10 @@ public class Imagen extends javax.swing.JFrame {
 
         pack();
     }
-
+    /**
+     * Pintamos el mapa pasado como parametro
+     * @param mapa mapa a pintar
+     */
     private void pintarMapa(int[][] mapa) {
 	Color color;
 
@@ -90,20 +100,30 @@ public class Imagen extends javax.swing.JFrame {
 	    }
 	}
     }
-
+    /**
+     * Nos hace visible la ventana 
+     */
     public void mostrar() {
 	setVisible(true);
     }
-
+    /**
+     * Método para cerrar nuestra ventana
+     */
     public void cerrar() {
 	dispose();
     }
-
+    /**
+     * Método que actualiza el mapa pasado como parametro
+     * @param mapa mapa a actualizar
+     */
     public void actualizarMapa(int mapa[][]) {
 	pintarMapa(mapa);
 	repaint();
     }
-
+    /**
+     * Método que guarda el mapa en un fichero png
+     * @param nombre del fichero en el que se guardara la imagen
+     */
     public void guardarPNG(String nombre) {
 	try {
 	    ImageIO.write(bufferedImage, "png", new File(nombre));

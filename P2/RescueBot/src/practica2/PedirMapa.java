@@ -12,7 +12,8 @@ package practica2;
 public class PedirMapa extends javax.swing.JDialog {
     private String nombreMapa;
     /**
-     * Creates new form PedirMapa
+     * Constructor que nos inicializa el objeto
+     * @author José Guadix
      */
     public PedirMapa(java.awt.Frame parent, boolean modal) {
 	super(parent, modal);
@@ -175,7 +176,10 @@ public class PedirMapa extends javax.swing.JDialog {
     private void mapaOtroItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_mapaOtroItemStateChanged
         textoOtro.setEditable(mapaOtro.isSelected());
     }//GEN-LAST:event_mapaOtroItemStateChanged
-
+    /**
+     * @author José Guadix
+     * @param evt click sobre el boton aceptar
+     */
     private void buttonAceptarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAceptarActionPerformed
         if(mapa1.isSelected()){
 	    nombreMapa = "map1";
@@ -200,13 +204,16 @@ public class PedirMapa extends javax.swing.JDialog {
 	}
 	this.dispose();
     }//GEN-LAST:event_buttonAceptarActionPerformed
-
+    /**
+     * @author José Guadix
+     * @param evt click sobre el boton salir 
+     */
     private void buttonSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSalirActionPerformed
         System.exit(0);
     }//GEN-LAST:event_buttonSalirActionPerformed
 
     /**
-     * 
+     *  @author José Guadix
      * @return El nombre del mapa o null en caso de cerrar la ventana.
      */
     public String getMapa(){

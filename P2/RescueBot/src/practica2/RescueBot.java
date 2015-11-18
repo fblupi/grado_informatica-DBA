@@ -57,6 +57,7 @@ public class RescueBot extends SingleAgent {
     private HashMap<Integer, Point> posicionesALiberar = new HashMap<Integer, Point>();
 
     /**
+     * Constructor de nuestro agente
      * @author Amanda Fernández
      * @author Francisco Javier Ortega
      * @author Antonio Espinosa
@@ -70,6 +71,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Inicializamos las variables 
      * @author Amanda Fernández
      * @author Francisco Javier Ortega
      * @author Antonio Espinosa
@@ -90,6 +92,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Método execute de nuestro agente donde controla los estados por los que pasa durante la ejecución
      * @author Amanda Fernández
      * @author Francisco Javier Ortega
      * @author Antonio Espinosa
@@ -124,6 +127,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Método en el que nuestr agente cierra la sesión con los controladores
      * @author Amanda Fernández
      * @author Francisco Javier Ortega
      * @author Antonio Espinosa
@@ -140,6 +144,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Inicializamos la conversación de nuestro agente con los controladores 
      * @author Amanda Fernández
      * @author Francisco Javier Ortega
      * @author Antonio Espinosa
@@ -152,6 +157,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Método en el que nuestro agente obtiene las respuestas de los controladores
      * @author José Guadix
      * @author Francisco Javier Ortega
      */
@@ -191,6 +197,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Implementación del estado repostar
      * @author José Guadix
      * @author Francisco Javier Ortega
      */
@@ -199,7 +206,12 @@ public class RescueBot extends SingleAgent {
 	nivelBateria = 100;
 	estadoActual = ESTADO_RECIBIR_DATOS;
     }
-
+    /**
+     * Nos indica si nuestro agente ha vuelto a una de las posiciones del movimiento pared
+     * @author 
+     * @param pos poosición del mapa
+     * @return True no esta en unas de las posiciones del movimiento pared  false si no lo esta
+     */
     private boolean tieneSolucion(int[] pos) {
 	for (Map.Entry<Point, Integer> entrySet : posicionesPared.entrySet()) {
 	    Point key = entrySet.getKey();
@@ -214,6 +226,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Implementación del estado movimiento encontrado
      * @author José Guadix
      * @author Francisco Javier Ortega
      */
@@ -226,36 +239,45 @@ public class RescueBot extends SingleAgent {
 	int[] pos = posicionOptima();
 	float scannerOptimo = ultimoScanner[pos[0]][pos[1]];
 	
-	if (!tieneSolucion(pos)) {
+	if (!tieneSolucion(pos)) { // si no tiene solución 
 	    System.out.println("\nLa solución no está accesible");
 	    decision = "logout";
-	} else if (moviendoPorPared) {
-	    if (scannerOptimo < miPrimerScannerPared) {
-		moviendoPorPared = false;
+	} else if (moviendoPorPared) {  // si me estoy moviendo por la pared 
+	    if (scannerOptimo < miPrimerScannerPared) { // si el scanneroptimo es menor al que tengo guardado 
+		moviendoPorPared = false; // dejamos el movimiento por la pared
 	    }
 	    decision = elegirMovimiento();
 	} else {
-	    if (optimaEsPared(pos)) {
-		if (!moviendoPorPared) {
+	    if (optimaEsPared(pos)) {   //si la optima es la pared y no nos estamos moviendo por la pared 
+		if (!moviendoPorPared) {// si ahora mismo no estabamos moviendonos por la pared actualizamos los datos
 		    moviendoPorPared = true;
 		    miPrimerScannerPared = scannerOptimo;
 		    posicionesPared.put(new Point(ultimoGPS[0], ultimoGPS[1]), pasos);
 		}
-	    } else {
+	    } else { //si a posicion optima no es la pared dejamos de movernos en la pared
 		moviendoPorPared = false;
 	    }
 	    decision = elegirMovimiento();
 	}
 	enviarMensaje(JSON.escribirAction(decision));
-	if (decision.equals("logout")) {
+	if (decision.equals("logout")) {    // si no encontramos un movimiento cerramos la sesión
 	    estadoActual = ESTADO_FINAL;
-	} else {
+	} else { // sino actualizamos los datos
 	    pasos++;
 	    nivelBateria--;
 	    estadoActual = ESTADO_RECIBIR_DATOS;
 	}
     }
-
+    /**
+     * Nos indica si la posición pasada como parámetro tiene una pared cerca
+     * @author Francisco Javier Ortega 
+     * @author José Guadix
+     * @author Antonio David López
+     * @param x posición x de nuestro mapa
+     * @param y posición y de nuestro mapa
+     * 
+     * @return Verdadero si esta cerca de la pared y false si no esta cerca de la pared
+     */
     private boolean tieneParedCerca(int x, int y) {
 	for (int i = x - 1; i <= x + 1; i++) {
 	    for (int j = y - 1; j <= y + 1; j++) {
@@ -268,10 +290,13 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Enviamos un mensaje pasado por parametro a un controlador.
+     * 
      * @author Amanda Fernández
      * @author Francisco Javier Ortega
      * @author Antonio Espinosa
-     * @param contenido
+     * 
+     * @param contenido mensaje a enviar al controlador
      */
     private void enviarMensaje(String contenido) {
 	System.out.println("Enviando mensaje: " + contenido);
@@ -318,7 +343,13 @@ public class RescueBot extends SingleAgent {
 	    }
 	}
     }
-
+    /**
+     * Busca en nuestro mapa 3x3 cual es la posición mas óptima de movimiento
+     * @author Francisco Javier Ortega 
+     * @author José Guadix
+     * @author Antonio David López
+     * @return La posición optima de movimiento
+     */
     private int[] posicionOptima() {
 	int[] optima = new int[2];
 	float floatMin = Float.MAX_VALUE;
@@ -333,7 +364,14 @@ public class RescueBot extends SingleAgent {
 	}
 	return optima;
     }
-
+    /**
+     * Nos indica si la posición pasada es pared o si no lo es
+     * @author Francisco Javier Ortega 
+     * @author José Guadix
+     * @author Antonio David López
+     * @param pos posición de nuestro mapa
+     * @return True si la posición que te pasa es pared false si no lo es
+     */
     private boolean optimaEsPared(int[] pos) {
 	return ultimoRadar[pos[0]][pos[1]] == OBSTACULO;
     }
@@ -430,6 +468,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Implementación del estado objetivo encontrado
      * @author José Guadix
      * @author Francisco Javier Ortega
      */
@@ -440,6 +479,7 @@ public class RescueBot extends SingleAgent {
     }
 
     /**
+     * Muestra el numero de pasos y el tiempo que tarda nuestro agente en encontrar el objetivo
      * @author Antonio Espinosa
      */
     private void mostrarResumen() {
@@ -450,11 +490,17 @@ public class RescueBot extends SingleAgent {
 	System.out.println("Pasos que ha dado el agente: " + pasos);
 	System.out.println("Tiempo de ejecución del mapa: " + minutos + " Minutos " + segundos + " Segundos");
     }
-
+    /**
+     *  Recorremos nuestro mapa 3x3 para ver si tenemos almenos 2 posiciónes libres
+     * @param y del mapa
+     * @param x del mapa
+     * @return True si el agente se va a encerrar y false si no se encierra
+     */
     private boolean voyAEncerrarme(int y, int x) {
 	int posX = ultimoGPS[0] + x - 2;
 	int posY = ultimoGPS[1] + y - 2;
 	int cont = 0;
+        
 	for (int i = -1; i <= 1; i++) {
 	    for (int j = -1; j <= 1; j++) {
 		if (posX + j >= 0 && posX + j < TAMANO_MAPA
@@ -469,7 +515,11 @@ public class RescueBot extends SingleAgent {
 	}
 	return cont <= 1;
     }
-
+    /**
+     * Libera las posiciones por donde puede volver a pasar cuando supera un determinado numero de pasos
+     * @author José Guadix
+     * @author Francisco Javier Bolivar 
+     */
     private void liberarPosiciones() {
 	//intentamos borrar devolviendo la posición si no existe devuelve null si existe ponemos esa posicion a LIBRE
 	Point p = posicionesALiberar.remove(pasos - UMBRAL_LIBERAR);
