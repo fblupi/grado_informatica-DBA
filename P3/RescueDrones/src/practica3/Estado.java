@@ -1,0 +1,6 @@
+package practica3;
+
+public enum Estado {
+
+    INICIAL, ELECCION_DRONE, PERCIBIR, REPOSTAR, MOVER, OBJETIVO_ENCONTRADO, FINALIZAR;
+}
