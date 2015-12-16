@@ -21,13 +21,13 @@ public class Imagen extends JFrame {
 
     private final int LIBRE = 0;
     private final int OBSTACULO = 1;
-    private final int BORDE = 2;
+    private final int PARED = 2;
     private final int OBJETIVO = 3;
-    private final int DESCONOCIDO = 4;
-    private final int RECORRIDO1 = 5;
-    private final int RECORRIDO2 = 6;
-    private final int RECORRIDO3 = 7;
-    private final int RECORRIDO4 = 8;
+    private final int RECORRIDO1 = 4;
+    private final int RECORRIDO2 = 5;
+    private final int RECORRIDO3 = 6;
+    private final int RECORRIDO4 = 7;
+    private final int DESCONOCIDA = 8;
     private final int ULT_POSICION1 = 9;
     private final int ULT_POSICION2 = 10;
     private final int ULT_POSICION3 = 11;
@@ -88,7 +88,7 @@ public class Imagen extends JFrame {
                         color = Color.WHITE;
                         break;
                     case OBSTACULO:
-                    case BORDE:
+                    case PARED:
                         color = Color.BLACK;
                         break;
                     case OBJETIVO:
@@ -106,7 +106,7 @@ public class Imagen extends JFrame {
                     case RECORRIDO4:
                         color = Color.ORANGE;
                         break;
-                    case DESCONOCIDO:
+                    case DESCONOCIDA:
                         color = Color.LIGHT_GRAY;
                         break;
                     case ULT_POSICION1:
