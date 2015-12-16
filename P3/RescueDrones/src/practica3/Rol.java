@@ -6,15 +6,22 @@ public enum Rol {
     private int id;
     private int consumo;
 
-    private Rol(int id, int consumo) {
-	throw new UnsupportedOperationException();
+    private Rol(int idd, int consum) {
+        id=idd;
+        consumo=consum;
     }
 
     public static Rol getRol(int id) {
-	throw new UnsupportedOperationException();
+        
+        for (Rol col : Rol.values()) {
+           if(col.id==id){
+               return col;
+           }     
+        }
+        return null;
     }
 
     public int getConsumo() {
-	return this.consumo;
+        return this.consumo;
     }
 }
