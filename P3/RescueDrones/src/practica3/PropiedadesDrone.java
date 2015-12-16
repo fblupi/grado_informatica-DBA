@@ -2,16 +2,20 @@ package practica3;
 
 import java.awt.Point;
 
+/**
+ * @author Amanda Fernández Piedra, Francisco Javier Ortega Palacios
+ * Contenedor de la información que tiene el controlador sobre un dron
+ */
 public class PropiedadesDrone {
 
     private Point gps;
     private int bateria;
     private boolean llegado;
     private Rol rol;
-    public Rol _rol;
-
+    
+    
     public PropiedadesDrone() {
-	throw new UnsupportedOperationException();
+	super();
     }
 
     public Point getGps() {
@@ -47,10 +51,12 @@ public class PropiedadesDrone {
     }
 
     public void setRol(int id) {
-	throw new UnsupportedOperationException();
+	this.rol = Rol.getRol(id);
     }
 
     public void actualizarPercepcion(Percepcion percepcion) {
-	throw new UnsupportedOperationException();
+	gps = percepcion.getGps();
+        bateria = percepcion.getBateria();
+        llegado = percepcion.getLlegado();
     }
 }
