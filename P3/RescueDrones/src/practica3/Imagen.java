@@ -19,27 +19,13 @@ public class Imagen extends JFrame {
     private BufferedImage bufferedImage;
     private JLabel labelMapa;
 
-    private final int LIBRE = 0;
-    private final int OBSTACULO = 1;
-    private final int PARED = 2;
-    private final int OBJETIVO = 3;
-    private final int RECORRIDO1 = 4;
-    private final int RECORRIDO2 = 5;
-    private final int RECORRIDO3 = 6;
-    private final int RECORRIDO4 = 7;
-    private final int DESCONOCIDA = 8;
-    private final int ULT_POSICION1 = 9;
-    private final int ULT_POSICION2 = 10;
-    private final int ULT_POSICION3 = 11;
-    private final int ULT_POSICION4 = 12;
-
     /**
      * Constructor donde se inicializa todos los valores de nuestro mapa
      *
      * @param mapa
      * @param mundo
      */
-    public Imagen(int[][] mapa, String mundo) {
+    public Imagen(Celda[][] mapa, String mundo) {
         initComponents();
         setLocationRelativeTo(null);
         setTitle("Traza de recorrido - " + mundo);
@@ -77,7 +63,7 @@ public class Imagen extends JFrame {
      *
      * @param mapa mapa a pintar
      */
-    private void pintarMapa(int[][] mapa) {
+    private void pintarMapa(Celda[][] mapa) {
         Color color;
 
         for (int i = 0; i < TAM; i++) {
@@ -143,7 +129,7 @@ public class Imagen extends JFrame {
      *
      * @param mapa mapa a actualizar
      */
-    public void actualizarMapa(int[][] mapa) {
+    public void actualizarMapa(Celda[][] mapa) {
         pintarMapa(mapa);
         repaint();
     }
