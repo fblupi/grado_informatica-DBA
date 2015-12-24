@@ -1,5 +1,6 @@
 package practica3;
 
+import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.HashMap;
@@ -96,12 +97,31 @@ public class AdmiralAckbar extends SingleAgent {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 
+     * @param receptor
+     * @param performativa
+     * @param contenido 
+     * @author José Guadix
+     */
     private void enviarMensaje(String receptor, int performativa, String contenido) {
-        throw new UnsupportedOperationException();
+        ACLMessage outbox = new ACLMessage();
+	outbox.setSender(this.getAid());
+	outbox.setReceiver(new AgentID(receptor));
+        outbox.setPerformative(performativa);
+	outbox.setContent(contenido);
+        this.send(outbox); 
     }
 
+    /**
+     * @author José Guadix
+     */
     private void inicializarMapa() {
-        throw new UnsupportedOperationException();
+        for (int i = 0; i < TAMANO_MAPA; i++) {
+	    for (int j = 0; j < TAMANO_MAPA; j++) {
+		mapa[i][j] = Celda.DESCONOCIDA;
+	    }
+	}
     }
 
     private void actualizarMapa(Percepcion percepcion) {
@@ -112,8 +132,39 @@ public class AdmiralAckbar extends SingleAgent {
         throw new UnsupportedOperationException();
     }
 
-    private String parseCoordMov(int x, int y) {
-        throw new UnsupportedOperationException();
+    /**
+     * A partir de dos coordenadas selecciona hacia dónde se mueve
+     *
+     * @author Francisco Javier Bolívar
+     * @author Antonio David López
+     * @param x coordenada x hacia donde se mueve
+     * @param y coordenada y hacia donde se mueve
+     * @return movimiento elegido
+     */
+    private String parserCoordMov(int x, int y) {
+	if (x == 1) {
+	    if (y == 1) {
+		return "moveNW";  // (1, 1)
+	    } else if (y == 2) {
+		return "moveN";   // (1, 2)
+	    } else {
+		return "moveNE";  // (1, 3)
+	    }
+	} else if (x == 2) {
+	    if (y == 1) {
+		return "moveW";   // (2, 1)
+	    } else {
+		return "moveE";   // (2, 3)  
+	    }
+	} else {
+	    if (y == 1) {
+		return "moveSW";  // (3, 1)
+	    } else if (y == 2) {
+		return "moveS";   // (3, 2)  
+	    } else {
+		return "moveSE";  // (3, 3)  
+	    }
+	}
     }
 
     private void faseInicial() {
