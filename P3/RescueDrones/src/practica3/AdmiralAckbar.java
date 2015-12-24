@@ -3,7 +3,12 @@ package practica3;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.HashMap;
+import java.util.Map;
 
 public class AdmiralAckbar extends SingleAgent {
 
@@ -18,118 +23,186 @@ public class AdmiralAckbar extends SingleAgent {
     private Imagen imagen;
     private String droneElegido;
     public Imagen _imagen;
-    public Estado _estadoActual,_estadoencontrado,_estadobusqueda;
-    
+    public Estado _estadoActual, _estadoencontrado, _estadobusqueda;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
-        super(id);
+	super(id);
+	this.mundoAVisitar = mundoAVisitar;
     }
 
     public void init() {
-        iniciarConversacoin();
-        inicializarMapa();
-        terminar = false;
-        buscando = true;
-
+	System.out.println(getName() + " Iniciandose ");
+	inicializarMapa();
+//	imagen.mostar();
+	terminar = false;
+	buscando = true;
+	flota = new HashMap<>();
+	flota.put("Drone0", null);
+	flota.put("Drone1", null);
+	flota.put("Drone2", null);
+	flota.put("Drone3", null);
+	_estadoActual = Estado.INICIAL;
     }
 
     public void execute() {
-        while (!terminar) {
-            switch (_estadoActual) {
-                case INICIAL:
-                    faseInicial();
-                    break;
+	System.out.println("Execute terminar: "  + terminar + " fase: " + _estadoActual);
+	while (!terminar) {
+	    switch (_estadoActual) {
+		case INICIAL:
+		    faseInicial();
+		    break;
 
-                case BUSCAR:
-                    while (buscando) {
-                        switch (_estadobusqueda) {
-                            case OBJETIVO_ENCONTRADO:
-                                buscando = false;
-                                faseObjetivoEncontrado();
-                                break;
-                            case ELECCION_DRONE:
-                                faseEleccionDrone();
-                                break;
-                            case MOVER:
-                                faseMover();
-                                break;
-                            case REPOSTAR:
-                                faseRepostar();
-                                break;
-                            case PERCIBIR:
-                                fasePercibir();
-                                break;
-                        }
-                    }
-                    break;
-                case OBJETIVO_ENCONTRADO:
-                    while (!buscando) {
-                        switch (_estadoencontrado) {
-                            case ELECCION_DRONE:
-                                faseEleccionDrone();
-                                break;
-                            case MOVER:
-                                faseMover();
-                                break;
-                            case REPOSTAR:
-                                faseRepostar();
-                                break;
-                            case PERCIBIR:
-                                fasePercibir();
-                                break;
-                        }
-                    }
+		case BUSCAR:
+		    while (buscando) {
+			switch (_estadobusqueda) {
+			    case OBJETIVO_ENCONTRADO:
+				buscando = false;
+				faseObjetivoEncontrado();
+				break;
+			    case ELECCION_DRONE:
+				faseEleccionDrone();
+				break;
+			    case MOVER:
+				faseMover();
+				break;
+			    case REPOSTAR:
+				faseRepostar();
+				break;
+			    case PERCIBIR:
+				fasePercibir();
+				break;
+			}
+		    }
+		    break;
+		case OBJETIVO_ENCONTRADO:
+		    while (!buscando) {
+			switch (_estadoencontrado) {
+			    case ELECCION_DRONE:
+				faseEleccionDrone();
+				break;
+			    case MOVER:
+				faseMover();
+				break;
+			    case REPOSTAR:
+				faseRepostar();
+				break;
+			    case PERCIBIR:
+				fasePercibir();
+				break;
+			}
+		    }
 
-                    break;
-                case FINALIZAR:
-                    faseFinalizar();
-                    break;
+		    break;
+		case FINALIZAR:
+		    faseFinalizar();
+		    break;
 
-            }
-        }
+	    }
+	}
     }
 
-    public void iniciarConversacoin() {
-
-    }
-
+    @Override
     public void finalize() {
-        throw new UnsupportedOperationException();
+	finalizarConversacion();
+	guardarLog();
+	imagen.guardarPNG(mundoAVisitar + " - " + JSON.getKey() + ".png");
+	imagen.cerrar();
+	super.finalize();
     }
 
     /**
-     * 
+     *
      * @param receptor
      * @param performativa
-     * @param contenido 
+     * @param contenido
      * @author José Guadix
      */
     private void enviarMensaje(String receptor, int performativa, String contenido) {
-        ACLMessage outbox = new ACLMessage();
+	ACLMessage outbox = new ACLMessage();
 	outbox.setSender(this.getAid());
 	outbox.setReceiver(new AgentID(receptor));
-        outbox.setPerformative(performativa);
+	outbox.setPerformative(performativa);
 	outbox.setContent(contenido);
-        this.send(outbox); 
+	System.out.println("Enviando mensaje a " + receptor + " tipo " + outbox.getPerformative() + " contenido " + contenido);
+	this.send(outbox);
+    }
+
+    private ACLMessage recibirMensaje() {
+	ACLMessage message = null;
+	try {
+	    message = receiveACLMessage();
+	} catch (InterruptedException ex) {
+	    System.err.println(ex.toString());
+	}
+	return message;
     }
 
     /**
      * @author José Guadix
      */
     private void inicializarMapa() {
-        for (int i = 0; i < TAMANO_MAPA; i++) {
+	for (int i = 0; i < TAMANO_MAPA; i++) {
 	    for (int j = 0; j < TAMANO_MAPA; j++) {
 		mapa[i][j] = Celda.DESCONOCIDA;
 	    }
 	}
     }
 
+    private void iniciarConversacion() {
+	String contenido = JSON.suscribirse(mundoAVisitar);
+	enviarMensaje(NOMBRE_CONTROLADOR, ACLMessage.SUBSCRIBE, contenido);
+	ACLMessage message = recibirMensaje();
+	if (message != null && message.getPerformativeInt() == ACLMessage.INFORM) {
+	    JSON.guardarKey(message.getContent());
+	    for (String string : flota.keySet()) {
+		contenido = JSON.checkin();
+		enviarMensaje(string, ACLMessage.REQUEST, contenido);
+	    }
+	    for (int i = 0; i < flota.size(); i++) {
+		message = recibirMensaje();
+		if (message != null && message.getPerformativeInt() == ACLMessage.INFORM) {
+		    PropiedadesDrone propiedades = new PropiedadesDrone();
+		    propiedades.setRol(JSON.getRol(message.getContent()));
+		    flota.put(message.getSender().toString(), propiedades);
+		}
+	    }
+	}
+	if (message == null) {
+	    _estadoActual = Estado.FINALIZAR;
+	}
+    }
+
+    private void inicializarPropiedadesDrone() {
+	String contenido, nombreDrone;
+	ACLMessage message = null;
+	PropiedadesDrone propiedades;
+	Percepcion percepcion;
+	for (String string : flota.keySet()) {
+	    contenido = JSON.key();
+	    enviarMensaje(string, ACLMessage.QUERY_REF, contenido);
+	}
+	for (int i = 0; i < flota.size(); i++) {
+	    message = recibirMensaje();
+	    if (message == null) {
+		_estadoActual = Estado.FINALIZAR;
+	    } else if (message.getPerformativeInt() == ACLMessage.INFORM) {
+		nombreDrone = message.getSender().toString();
+		propiedades = flota.get(nombreDrone);
+		percepcion = JSON.getPercepcion(message.getContent());
+		propiedades.actualizarPercepcion(percepcion);
+		flota.put(nombreDrone, propiedades);
+		actualizarMapa(percepcion);
+	    }
+
+	}
+    }
+
     private void actualizarMapa(Percepcion percepcion) {
-        throw new UnsupportedOperationException();
+	throw new UnsupportedOperationException();
     }
 
     private String elegirMovimiento() {
-        throw new UnsupportedOperationException();
+	throw new UnsupportedOperationException();
     }
 
     /**
@@ -168,30 +241,72 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void faseInicial() {
-        throw new UnsupportedOperationException();
+	System.out.println("FASE INICIAL");
+	iniciarConversacion();
+	inicializarPropiedadesDrone();
+	if (_estadoActual != Estado.FINALIZAR) {
+//	    _estadoActual = Estado.BUSCAR;
+	    _estadoActual = Estado.FINALIZAR;
+	}
     }
 
     private void faseEleccionDrone() {
-        throw new UnsupportedOperationException();
+	throw new UnsupportedOperationException();
     }
 
     private void fasePercibir() {
-        throw new UnsupportedOperationException();
+	throw new UnsupportedOperationException();
     }
 
     private void faseRepostar() {
-        throw new UnsupportedOperationException();
+	throw new UnsupportedOperationException();
     }
 
     private void faseMover() {
-        throw new UnsupportedOperationException();
+	throw new UnsupportedOperationException();
     }
 
     private void faseObjetivoEncontrado() {
-        throw new UnsupportedOperationException();
+	throw new UnsupportedOperationException();
     }
 
     private void faseFinalizar() {
-        throw new UnsupportedOperationException();
+	terminar = true;
+    }
+
+    private void finalizarConversacion() {
+	String contenido = JSON.key();
+	for (String string : flota.keySet()) {
+	    enviarMensaje(string, ACLMessage.CANCEL, contenido);
+	}
+	enviarMensaje(NOMBRE_CONTROLADOR, ACLMessage.CANCEL, contenido);
+    }
+
+    private void guardarLog() {
+	BufferedWriter writer = null;
+	try {
+	    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mundoAVisitar + " - " + JSON.getKey() + ".txt"), "utf-8"));
+	    for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) {
+		String key = par.getKey();
+		PropiedadesDrone value = par.getValue();
+		writer.write(key);
+		writer.newLine();
+		writer.write("Rol: " + value.getRol().toString());
+		writer.newLine();
+		writer.write("Llegado: " + value.getLlegado());
+		writer.newLine();
+		writer.newLine();
+	    }
+	} catch (Exception ex) {
+	    System.err.println(ex.getMessage());
+	} finally {
+	    if (writer != null) {
+		try {
+		    writer.close();
+		} catch (IOException ex) {
+		    System.out.println(ex.getMessage());
+		}
+	    }
+	}
     }
 }

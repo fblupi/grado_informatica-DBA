@@ -17,7 +17,7 @@ public class Drone extends SingleAgent {
     }
 
     public void init() {
-	System.out.println("Bot Iniciandose ");
+	System.out.println(getName() + " Iniciandose ");
 	inbox = null;
 	outbox = null;
 	terminar = false;
