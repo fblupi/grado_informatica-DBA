@@ -4,6 +4,7 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -283,6 +284,10 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void guardarLog() {
+	File file = new File("seguimiento");
+	if(!file.exists()){
+	    file.mkdir();
+	}
 	BufferedWriter writer = null;
 	try {
 	    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("seguimiento/" + mundoAVisitar + " - " + JSON.getKey() + ".txt"), "utf-8"));
