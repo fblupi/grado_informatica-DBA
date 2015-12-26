@@ -15,7 +15,7 @@ public class main {
 	String mundo = pedirMapa.getMapa();
 	if (mundo != null) {
 	    AdmiralAckbar ackbar = null;
-	    Drone [] drones = new Drone[4];
+	    Drone[] drones = new Drone[4];
 
 	    AgentsConnection.connect("isg2.ugr.es", 6000, "Cerastes", "Unicornio", "Matute", false);
 	    try {
@@ -27,6 +27,7 @@ public class main {
 		ackbar.start();
 	    } catch (Exception ex) {
 		System.err.println("Error creando agentes");
+		System.err.println(ex.toString());
 		System.exit(1);
 	    }
 	}

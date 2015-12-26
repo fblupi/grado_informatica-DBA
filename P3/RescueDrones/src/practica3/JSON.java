@@ -49,7 +49,7 @@ public class JSON {
      */
     public static String checkin() {
 	JsonObject object = new JsonObject();
-	object.add("comand", "checkin");
+	object.add("command", "checkin");
 	object.add("key", key);
 	return object.toString();
     }
@@ -74,7 +74,7 @@ public class JSON {
      */
     public static String mover(String movimiento) {
 	JsonObject object = new JsonObject();
-	object.add("comand", movimiento);
+	object.add("command", movimiento);
 	object.add("key", key);
 	return object.toString();
     }
@@ -86,7 +86,7 @@ public class JSON {
      */
     public static String repostar() {
 	JsonObject object = new JsonObject();
-	object.add("comand", "refuel");
+	object.add("command", "refuel");
 	object.add("key", key);
 	return object.toString();
     }

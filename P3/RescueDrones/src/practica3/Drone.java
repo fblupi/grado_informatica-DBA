@@ -30,12 +30,11 @@ public class Drone extends SingleAgent {
         while(!terminar){
             try {
                 inbox = receiveACLMessage();
-                System.out.println("Mensaje recibido: " + inbox.getContent());
-
+                System.out.println(getName() + " ha recibido: " + inbox.getContent());
                 if(inbox.getPerformativeInt()==ACLMessage.CANCEL){
                     terminar = true;
                 }else{
-                    if(inbox.getSender().toString().equals(NOMBRE_SERVIDOR)){
+                    if(inbox.getSender().name.equals(NOMBRE_SERVIDOR)){
                         receptor = NOMBRE_CONTROLADOR;
                     }else{
                         receptor = NOMBRE_SERVIDOR;
@@ -58,6 +57,7 @@ public class Drone extends SingleAgent {
 	outbox.setReceiver(new AgentID(receptor));
         outbox.setPerformative(performativa);
 	outbox.setContent(contenido);
+	System.out.println(getName() + ": enviando mensaje a " + receptor + " tipo " + outbox.getPerformative() + " contenido " + contenido);
         this.send(outbox);   
     }
 }

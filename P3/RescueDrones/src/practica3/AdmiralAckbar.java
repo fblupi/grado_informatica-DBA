@@ -33,7 +33,8 @@ public class AdmiralAckbar extends SingleAgent {
     public void init() {
 	System.out.println(getName() + " Iniciandose ");
 	inicializarMapa();
-//	imagen.mostar();
+	imagen = new Imagen(mapa, mundoAVisitar);
+	imagen.mostar();
 	terminar = false;
 	buscando = true;
 	flota = new HashMap<>();
@@ -105,7 +106,7 @@ public class AdmiralAckbar extends SingleAgent {
     public void finalize() {
 	finalizarConversacion();
 	guardarLog();
-	imagen.guardarPNG(mundoAVisitar + " - " + JSON.getKey() + ".png");
+	imagen.guardarPNG("seguimiento/" + mundoAVisitar + " - " + JSON.getKey() + ".png");
 	imagen.cerrar();
 	super.finalize();
     }
@@ -123,7 +124,7 @@ public class AdmiralAckbar extends SingleAgent {
 	outbox.setReceiver(new AgentID(receptor));
 	outbox.setPerformative(performativa);
 	outbox.setContent(contenido);
-	System.out.println("Enviando mensaje a " + receptor + " tipo " + outbox.getPerformative() + " contenido " + contenido);
+	System.out.println(getName() + ": enviando mensaje a " + receptor + " tipo " + outbox.getPerformative() + " contenido " + contenido);
 	this.send(outbox);
     }
 
@@ -163,7 +164,7 @@ public class AdmiralAckbar extends SingleAgent {
 		if (message != null && message.getPerformativeInt() == ACLMessage.INFORM) {
 		    PropiedadesDrone propiedades = new PropiedadesDrone();
 		    propiedades.setRol(JSON.getRol(message.getContent()));
-		    flota.put(message.getSender().toString(), propiedades);
+		    flota.put(message.getSender().name, propiedades);
 		}
 	    }
 	}
@@ -186,7 +187,7 @@ public class AdmiralAckbar extends SingleAgent {
 	    if (message == null) {
 		_estadoActual = Estado.FINALIZAR;
 	    } else if (message.getPerformativeInt() == ACLMessage.INFORM) {
-		nombreDrone = message.getSender().toString();
+		nombreDrone = message.getSender().name;
 		propiedades = flota.get(nombreDrone);
 		percepcion = JSON.getPercepcion(message.getContent());
 		propiedades.actualizarPercepcion(percepcion);
@@ -198,7 +199,7 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void actualizarMapa(Percepcion percepcion) {
-	throw new UnsupportedOperationException();
+	
     }
 
     private String elegirMovimiento() {
@@ -241,7 +242,6 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void faseInicial() {
-	System.out.println("FASE INICIAL");
 	iniciarConversacion();
 	inicializarPropiedadesDrone();
 	if (_estadoActual != Estado.FINALIZAR) {
@@ -285,7 +285,7 @@ public class AdmiralAckbar extends SingleAgent {
     private void guardarLog() {
 	BufferedWriter writer = null;
 	try {
-	    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mundoAVisitar + " - " + JSON.getKey() + ".txt"), "utf-8"));
+	    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("seguimiento/" + mundoAVisitar + " - " + JSON.getKey() + ".txt"), "utf-8"));
 	    for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) {
 		String key = par.getKey();
 		PropiedadesDrone value = par.getValue();
