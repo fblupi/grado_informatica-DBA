@@ -47,7 +47,7 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     public void execute() {
-	System.out.println("Execute terminar: "  + terminar + " fase: " + _estadoActual);
+	System.out.println("Execute terminar: " + terminar + " fase: " + _estadoActual);
 	while (!terminar) {
 	    switch (_estadoActual) {
 		case INICIAL:
@@ -129,16 +129,6 @@ public class AdmiralAckbar extends SingleAgent {
 	this.send(outbox);
     }
 
-    private ACLMessage recibirMensaje() {
-	ACLMessage message = null;
-	try {
-	    message = receiveACLMessage();
-	} catch (InterruptedException ex) {
-	    System.err.println(ex.toString());
-	}
-	return message;
-    }
-
     /**
      * @author José Guadix
      */
@@ -150,30 +140,39 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * @author José Guadix
+     */
     private void iniciarConversacion() {
 	String contenido = JSON.suscribirse(mundoAVisitar);
 	enviarMensaje(NOMBRE_CONTROLADOR, ACLMessage.SUBSCRIBE, contenido);
-	ACLMessage message = recibirMensaje();
-	if (message != null && message.getPerformativeInt() == ACLMessage.INFORM) {
-	    JSON.guardarKey(message.getContent());
-	    for (String string : flota.keySet()) {
-		contenido = JSON.checkin();
-		enviarMensaje(string, ACLMessage.REQUEST, contenido);
-	    }
-	    for (int i = 0; i < flota.size(); i++) {
-		message = recibirMensaje();
-		if (message != null && message.getPerformativeInt() == ACLMessage.INFORM) {
-		    PropiedadesDrone propiedades = new PropiedadesDrone();
-		    propiedades.setRol(JSON.getRol(message.getContent()));
-		    flota.put(message.getSender().name, propiedades);
+	ACLMessage message = null;
+	try {
+	    message = receiveACLMessage();
+	    if (message.getPerformativeInt() == ACLMessage.INFORM) {
+		JSON.guardarKey(message.getContent());
+		for (String string : flota.keySet()) {
+		    contenido = JSON.checkin();
+		    enviarMensaje(string, ACLMessage.REQUEST, contenido);
+		}
+		for (int i = 0; i < flota.size(); i++) {
+		    message = receiveACLMessage();
+		    if (message != null && message.getPerformativeInt() == ACLMessage.INFORM) {
+			PropiedadesDrone propiedades = new PropiedadesDrone();
+			propiedades.setRol(JSON.getRol(message.getContent()));
+			flota.put(message.getSender().name, propiedades);
+		    }
 		}
 	    }
-	}
-	if (message == null) {
+	} catch (InterruptedException ex) {
+	    System.err.println(ex.toString());
 	    _estadoActual = Estado.FINALIZAR;
 	}
     }
 
+    /**
+     * @author José Guadix
+     */
     private void inicializarPropiedadesDrone() {
 	String contenido, nombreDrone;
 	ACLMessage message = null;
@@ -183,24 +182,41 @@ public class AdmiralAckbar extends SingleAgent {
 	    contenido = JSON.key();
 	    enviarMensaje(string, ACLMessage.QUERY_REF, contenido);
 	}
-	for (int i = 0; i < flota.size(); i++) {
-	    message = recibirMensaje();
-	    if (message == null) {
-		_estadoActual = Estado.FINALIZAR;
-	    } else if (message.getPerformativeInt() == ACLMessage.INFORM) {
-		nombreDrone = message.getSender().name;
-		propiedades = flota.get(nombreDrone);
-		percepcion = JSON.getPercepcion(message.getContent());
-		propiedades.actualizarPercepcion(percepcion);
-		flota.put(nombreDrone, propiedades);
-		actualizarMapa(percepcion);
+	try {
+	    for (int i = 0; i < flota.size(); i++) {
+		message = receiveACLMessage();
+		if (message.getPerformativeInt() == ACLMessage.INFORM) {
+		    nombreDrone = message.getSender().name;
+		    propiedades = flota.get(nombreDrone);
+		    percepcion = JSON.getPercepcion(message.getContent());
+		    percepcion.setNombreDrone(nombreDrone);
+		    propiedades.actualizarPercepcion(percepcion);
+		    flota.put(nombreDrone, propiedades);
+		    actualizarMapa(percepcion);
+		}
 	    }
-
+	} catch (InterruptedException ex) {
+	    System.err.println(ex.toString());
+	    _estadoActual = Estado.FINALIZAR;
 	}
     }
 
     private void actualizarMapa(Percepcion percepcion) {
-	
+	int posX = percepcion.getGps().x;
+	int posY = percepcion.getGps().y;
+	mapa[posX][posY] = Celda.getRecorrido(percepcion.getNombreDrone());   // Guarda posición actual como posición por donde ha pasado
+	int[][] radar = percepcion.getRadar();
+	int tam = radar.length;
+	for (int i = 0, y = posY - tam/2; i < tam; i++, y++) {      // x: recorre el radar, i: recorre mapa desde la posición actual
+	    for (int j = 0, x = posX - tam/2; j < tam; j++, x++) {  // y: recorre el radar, j: recorre mapa desde la posición actual
+		if ((x >= 0 && x < TAMANO_MAPA) && (y >= 0 && y < TAMANO_MAPA)) { // No se sale del límite
+		    if (mapa[x][y] == Celda.DESCONOCIDA) { // No machaca pasos anteriores
+			mapa[x][y] = Celda.getCelda(radar[i][j]);   // Actualiza casilla con el valor recibido del radar
+		    }
+		}
+	    }
+	}
+	imagen.actualizarMapa(mapa);
     }
 
     private String elegirMovimiento() {
@@ -242,6 +258,9 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * @author José Guadix
+     */
     private void faseInicial() {
 	iniciarConversacion();
 	inicializarPropiedadesDrone();
@@ -285,7 +304,7 @@ public class AdmiralAckbar extends SingleAgent {
 
     private void guardarLog() {
 	File file = new File("seguimiento");
-	if(!file.exists()){
+	if (!file.exists()) {
 	    file.mkdir();
 	}
 	BufferedWriter writer = null;

@@ -89,7 +89,7 @@ public class Imagen extends JFrame {
                     case RECORRIDO3:
                         color = Color.BLUE;
                         break;
-                    case RECORRIDO4:
+                    case RECORRIDO0:
                         color = Color.ORANGE;
                         break;
                     case DESCONOCIDA:
