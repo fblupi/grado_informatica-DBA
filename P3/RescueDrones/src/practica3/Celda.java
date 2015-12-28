@@ -3,23 +3,35 @@ package practica3;
 public enum Celda {
 
     LIBRE, OBSTACULO, PARED, OBJETIVO, RECORRIDO0, RECORRIDO1, RECORRIDO2, RECORRIDO3,
-    DESCONOCIDA, ULT_POSICION1, ULT_POSICION2, ULT_POSICION3, ULT_POSICION4;
+    DESCONOCIDA, ULT_POSICION0, ULT_POSICION1, ULT_POSICION2, ULT_POSICION3;
 
     public static Celda getRecorrido(String nombre) {
-	if(nombre.equals("Drone0")){
+	if (nombre.equals("Drone0")) {
 	    return RECORRIDO0;
-	}else if(nombre.equals("Drone1")){
+	} else if (nombre.equals("Drone1")) {
 	    return RECORRIDO1;
-	}else if(nombre.equals("Drone2")){
+	} else if (nombre.equals("Drone2")) {
 	    return RECORRIDO2;
-	}else{
+	} else {
 	    return RECORRIDO3;
 	}
     }
-    
-    public static Celda getCelda(int id){
+
+    public static Celda getUlt_Posicion(String nombre) {
+	if (nombre.equals("Drone0")) {
+	    return ULT_POSICION0;
+	} else if (nombre.equals("Drone1")) {
+	    return ULT_POSICION1;
+	} else if (nombre.equals("Drone2")) {
+	    return ULT_POSICION2;
+	} else {
+	    return ULT_POSICION3;
+	}
+    }
+
+    public static Celda getCelda(int id) {
 	Celda celda = DESCONOCIDA;
-	switch(id){
+	switch (id) {
 	    case 0:
 		celda = LIBRE;
 		break;

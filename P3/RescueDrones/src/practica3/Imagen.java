@@ -26,36 +26,36 @@ public class Imagen extends JFrame {
      * @param mundo
      */
     public Imagen(Celda[][] mapa, String mundo) {
-        initComponents();
-        setLocationRelativeTo(null);
-        setTitle("Traza de recorrido - " + mundo);
-        setSize(TAM + 50, TAM + 70);
-        labelMapa.setSize(TAM, TAM);
-        bufferedImage = new BufferedImage(TAM, TAM, BufferedImage.TYPE_INT_RGB);
-        pintarMapa(mapa);
-        ImageIcon i = new ImageIcon(bufferedImage);
-        labelMapa.setIcon(i);
+	initComponents();
+	setLocationRelativeTo(null);
+	setTitle("Traza de recorrido - " + mundo);
+	setSize(TAM + 50, TAM + 70);
+	labelMapa.setSize(TAM, TAM);
+	bufferedImage = new BufferedImage(TAM, TAM, BufferedImage.TYPE_INT_RGB);
+	pintarMapa(mapa);
+	ImageIcon i = new ImageIcon(bufferedImage);
+	labelMapa.setIcon(i);
     }
 
     /**
      * Inicializamos los componentes de nuestra ventana
      */
     private void initComponents() {
-        labelMapa = new javax.swing.JLabel();
+	labelMapa = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximumSize(new java.awt.Dimension(500, 500));
-        setMinimumSize(new java.awt.Dimension(500, 500));
-        setResizable(false);
+	setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+	setMaximumSize(new java.awt.Dimension(500, 500));
+	setMinimumSize(new java.awt.Dimension(500, 500));
+	setResizable(false);
 
-        labelMapa.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        labelMapa.setMaximumSize(new java.awt.Dimension(500, 500));
-        labelMapa.setMinimumSize(new java.awt.Dimension(500, 500));
-        labelMapa.setPreferredSize(new java.awt.Dimension(500, 500));
-        labelMapa.setRequestFocusEnabled(false);
-        getContentPane().add(labelMapa, java.awt.BorderLayout.CENTER);
+	labelMapa.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+	labelMapa.setMaximumSize(new java.awt.Dimension(500, 500));
+	labelMapa.setMinimumSize(new java.awt.Dimension(500, 500));
+	labelMapa.setPreferredSize(new java.awt.Dimension(500, 500));
+	labelMapa.setRequestFocusEnabled(false);
+	getContentPane().add(labelMapa, java.awt.BorderLayout.CENTER);
 
-        pack();
+	pack();
     }
 
     /**
@@ -64,64 +64,64 @@ public class Imagen extends JFrame {
      * @param mapa mapa a pintar
      */
     private void pintarMapa(Celda[][] mapa) {
-        Color color;
+	Color color;
 
-        for (int i = 0; i < TAM; i++) {
-            for (int j = 0; j < TAM; j++) {
+	for (int i = 0; i < TAM; i++) {
+	    for (int j = 0; j < TAM; j++) {
 
-                switch (mapa[i][j]) {
-                    case LIBRE:
-                        color = Color.WHITE;
-                        break;
-                    case OBSTACULO:
-                    case PARED:
-                        color = Color.BLACK;
-                        break;
-                    case OBJETIVO:
-                        color = Color.RED;
-                        break;
-                    case RECORRIDO1:
-                        color = Color.GREEN;
-                        break;
-                    case RECORRIDO2:
-                        color = Color.YELLOW;
-                        break;
-                    case RECORRIDO3:
-                        color = Color.BLUE;
-                        break;
-                    case RECORRIDO0:
-                        color = Color.ORANGE;
-                        break;
-                    case DESCONOCIDA:
-                        color = Color.LIGHT_GRAY;
-                        break;
-                    case ULT_POSICION1:
-                    case ULT_POSICION2:
-                    case ULT_POSICION3:
-                    case ULT_POSICION4:
-                        color = Color.PINK;
-                        break;
-                    default:
-                        color = Color.MAGENTA;
-                        break;
-                }
-                bufferedImage.setRGB(i, j, color.getRGB());
-            }
-        }
+		switch (mapa[i][j]) {
+		    case LIBRE:
+			color = Color.WHITE;
+			break;
+		    case OBSTACULO:
+		    case PARED:
+			color = Color.BLACK;
+			break;
+		    case OBJETIVO:
+			color = Color.RED;
+			break;
+		    case RECORRIDO0:
+			color = Color.ORANGE;
+			break;
+		    case RECORRIDO1:
+			color = Color.GREEN;
+			break;
+		    case RECORRIDO2:
+			color = Color.YELLOW;
+			break;
+		    case RECORRIDO3:
+			color = Color.BLUE;
+			break;
+		    case DESCONOCIDA:
+			color = Color.LIGHT_GRAY;
+			break;
+		    case ULT_POSICION0:
+		    case ULT_POSICION1:
+		    case ULT_POSICION2:
+		    case ULT_POSICION3:
+			color = Color.PINK;
+			break;
+		    default:
+			color = Color.MAGENTA;
+			break;
+		}
+		bufferedImage.setRGB(i, j, color.getRGB());
+	    }
+	}
     }
 
     /**
      * Nos hace visible la ventana
      */
     public void mostar() {
-        setVisible(true);
+	setVisible(true);
     }
 
     /**
      * Método para cerrar nuestra ventana
      */
     public void cerrar() {
-        dispose();
+	dispose();
     }
 
     /**
@@ -130,8 +130,8 @@ public class Imagen extends JFrame {
      * @param mapa mapa a actualizar
      */
     public void actualizarMapa(Celda[][] mapa) {
-        pintarMapa(mapa);
-        repaint();
+	pintarMapa(mapa);
+	repaint();
     }
 
     /**
@@ -140,10 +140,10 @@ public class Imagen extends JFrame {
      * @param nombre del fichero en el que se guardara la imagen
      */
     public void guardarPNG(String nombre) {
-        try {
-            ImageIO.write(bufferedImage, "png", new File(nombre));
-        } catch (IOException ex) {
-            System.out.println(ex.toString());
-        }
+	try {
+	    ImageIO.write(bufferedImage, "png", new File(nombre));
+	} catch (IOException ex) {
+	    System.out.println(ex.toString());
+	}
     }
 }

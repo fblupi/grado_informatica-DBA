@@ -23,7 +23,6 @@ public class AdmiralAckbar extends SingleAgent {
     private Estado estadoActual;
     private Imagen imagen;
     private String droneElegido;
-    public Imagen _imagen;
     public Estado _estadoActual, _estadoencontrado, _estadobusqueda;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
@@ -107,8 +106,7 @@ public class AdmiralAckbar extends SingleAgent {
     public void finalize() {
 	finalizarConversacion();
 	guardarLog();
-	imagen.guardarPNG("seguimiento/" + mundoAVisitar + " - " + JSON.getKey() + ".png");
-	imagen.cerrar();
+	guardarImagen();
 	super.finalize();
     }
 
@@ -207,8 +205,8 @@ public class AdmiralAckbar extends SingleAgent {
 	mapa[posX][posY] = Celda.getRecorrido(percepcion.getNombreDrone());   // Guarda posición actual como posición por donde ha pasado
 	int[][] radar = percepcion.getRadar();
 	int tam = radar.length;
-	for (int i = 0, y = posY - tam/2; i < tam; i++, y++) {      // x: recorre el radar, i: recorre mapa desde la posición actual
-	    for (int j = 0, x = posX - tam/2; j < tam; j++, x++) {  // y: recorre el radar, j: recorre mapa desde la posición actual
+	for (int i = 0, y = posY - tam / 2; i < tam; i++, y++) {  
+	    for (int j = 0, x = posX - tam / 2; j < tam; j++, x++) {
 		if ((x >= 0 && x < TAMANO_MAPA) && (y >= 0 && y < TAMANO_MAPA)) { // No se sale del límite
 		    if (mapa[x][y] == Celda.DESCONOCIDA) { // No machaca pasos anteriores
 			mapa[x][y] = Celda.getCelda(radar[i][j]);   // Actualiza casilla con el valor recibido del radar
@@ -332,5 +330,17 @@ public class AdmiralAckbar extends SingleAgent {
 		}
 	    }
 	}
+    }
+
+    private void guardarImagen() {
+	for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) { //Cambia el color de la ultima posición si no ha llegado
+	    String key = par.getKey();
+	    PropiedadesDrone value = par.getValue();
+	    if (!value.getLlegado()) {
+		mapa[value.getGps().x][value.getGps().y] = Celda.getUlt_Posicion(key);
+	    }
+	}
+	imagen.guardarPNG("seguimiento/" + mundoAVisitar + " - " + JSON.getKey() + ".png");
+	imagen.cerrar();
     }
 }
