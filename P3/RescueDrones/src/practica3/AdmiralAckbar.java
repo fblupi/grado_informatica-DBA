@@ -16,14 +16,18 @@ public class AdmiralAckbar extends SingleAgent {
 
     private final short TAMANO_MAPA = 500;
     private final String NOMBRE_CONTROLADOR = "Cerastes";
+    private short tamanoMapa = 0;
     private HashMap<String, PropiedadesDrone> flota;
     private int energia;
     private Celda[][] mapa = new Celda[TAMANO_MAPA][TAMANO_MAPA];
+    private double[][] scanner = new double[TAMANO_MAPA][TAMANO_MAPA];
     private boolean terminar, buscando;
     private String mundoAVisitar;
     private Imagen imagen;
     private String droneElegido;
     private Estado estadoActual, subEstadoBuscando, subEstadoEncontrado;
+    private int pasos = 0;
+    private int pasosMaximos;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
 	super(id);
@@ -63,6 +67,7 @@ public class AdmiralAckbar extends SingleAgent {
 			    faseEleccionDrone();
 			    break;
 			case MOVER:
+			    generarPuntoObjetivo();
 			    faseMover();
 			    break;
 			case REPOSTAR:
@@ -186,6 +191,11 @@ public class AdmiralAckbar extends SingleAgent {
 		    percepcion.setNombreDrone(nombreDrone);
 		    propiedades.actualizarPercepcion(percepcion);
 		    flota.put(nombreDrone, propiedades);
+		    if(percepcion.getGps().x == 99){
+			tamanoMapa = 100;
+		    }else if(percepcion.getGps().x == 499 || percepcion.getGps().y >= 100){
+			tamanoMapa = 500;
+		    }
 		    actualizarMapa(percepcion);
 		}
 	    }
@@ -259,8 +269,10 @@ public class AdmiralAckbar extends SingleAgent {
 	iniciarConversacion();
 	inicializarPropiedadesDrone();
 	if (estadoActual != Estado.FINALIZAR) {
-//	    _estadoActual = Estado.BUSCAR;
-	    estadoActual = Estado.FINALIZAR;
+	    estadoActual = Estado.BUSCAR;
+	}
+	if (tamanoMapa == 0) {
+	    estadoActual = Estado.INICIAL;
 	}
     }
 
@@ -365,5 +377,12 @@ public class AdmiralAckbar extends SingleAgent {
 	p.x = p.y = 0;
 	//
 	return p;
+    }
+
+    private void generarPuntoObjetivo() {
+	throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	//si pasos < pasos Maximo 
+	// generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
+	//llamas a la funcion generar scanner
     }
 }
