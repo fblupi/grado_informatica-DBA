@@ -277,7 +277,13 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void faseRepostar() {
-	throw new UnsupportedOperationException();
+	enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
+	try {
+	    receiveACLMessage();
+	} catch (InterruptedException ex) {
+	    System.err.println(ex.toString());
+	    estadoActual = Estado.FINALIZAR;
+	}
     }
 
     private void faseMover() {
