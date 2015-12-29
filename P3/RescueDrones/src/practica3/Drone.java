@@ -6,7 +6,7 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 
 public class Drone extends SingleAgent {
 
-    private final String NOMBRE_CONTROLADOR = "Ackbar";
+    private final String NOMBRE_CONTROLADOR = "Ackbar__";
     private final String NOMBRE_SERVIDOR = "Cerastes";
     boolean terminar;
     private ACLMessage inbox, outbox;
@@ -30,7 +30,7 @@ public class Drone extends SingleAgent {
         while(!terminar){
             try {
                 inbox = receiveACLMessage();
-                System.out.println(getName() + " ha recibido: " + inbox.getContent());
+//                System.out.println(getName() + " ha recibido: " + inbox.getContent());
                 if(inbox.getPerformativeInt()==ACLMessage.CANCEL){
                     terminar = true;
                 }else{
@@ -57,7 +57,7 @@ public class Drone extends SingleAgent {
 	outbox.setReceiver(new AgentID(receptor));
         outbox.setPerformative(performativa);
 	outbox.setContent(contenido);
-	System.out.println(getName() + ": enviando mensaje a " + receptor + " tipo " + outbox.getPerformative() + " contenido " + contenido);
+//	System.out.println(getName() + ": enviando mensaje a " + receptor + " tipo " + outbox.getPerformative() + " contenido " + contenido);
         this.send(outbox);   
     }
 }
