@@ -278,6 +278,10 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * 
+     * @author José Guadix
+     */
     private void faseEleccionDrone() {
 	if (buscando) {
 	    int rolMax = -1;
