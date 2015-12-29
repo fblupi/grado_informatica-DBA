@@ -30,6 +30,8 @@ public class AdmiralAckbar extends SingleAgent {
     private int pasos = 0;
     private int pasosMaximos = 0;
     private Point puntoObjetivo = null;
+    private boolean moviendoPorPared;
+    private double miPrimerScannerPared;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
 	super(id);
@@ -342,8 +344,72 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * @author Antonio Espinosa
+     */
     private void faseMover() {
-	throw new UnsupportedOperationException();
+
+        String decision;
+        int[] pos = posicionOptima();
+        double scannerOptimo = scanner[pos[0]][pos[1]];
+
+        if (moviendoPorPared) {  // si me estoy moviendo por la pared 
+            if (scannerOptimo < miPrimerScannerPared) { // si el scanneroptimo es menor al que tengo guardado 
+                moviendoPorPared = false; // dejamos el movimiento por la pared
+            }
+            decision = elegirMovimiento();
+        } else {
+            if (optimaEsPared(pos)) {   //si la optima es la pared y no nos estamos moviendo por la pared 
+                if (!moviendoPorPared) {// si ahora mismo no estabamos moviendonos por la pared actualizamos los datos
+                    moviendoPorPared = true;
+                    miPrimerScannerPared = scannerOptimo;
+                }
+            } else { //si a posicion optima no es la pared dejamos de movernos en la pared
+                moviendoPorPared = false;
+            }
+            decision = elegirMovimiento();
+        }
+
+    }
+
+    /**
+     * Busca en nuestro mapa 3x3 cual es la posición mas óptima de movimiento
+     *
+     * @author Antonio Espinosa
+     * @return La posición optima de movimiento
+     */
+    private int[] posicionOptima() {
+        int[] optima = new int[2];
+        double floatMin = Float.MAX_VALUE;
+        int x = flota.get(droneElegido).getGps().x;
+        int y = flota.get(droneElegido).getGps().y;
+
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if ((x + i) > 0 && (y + j) > 0 && (x + i) < TAMANO_MAPA && (y + j) < TAMANO_MAPA) {
+                    if (scanner[x + i][y + j] < floatMin) {
+                        floatMin = scanner[x + i][y + j];
+                        optima[0] = i;
+                        optima[1] = j;
+                    }
+                }
+            }
+        }
+        return optima;
+    }
+
+    /**
+     * Nos indica si la posición pasada es pared o si no lo es
+     *
+     * @author Antonio Espinosa
+     * @param pos posición de nuestro mapa
+     * @return True si la posición que te pasa es pared false si no lo es
+     */
+    private boolean optimaEsPared(int[] pos) {
+        int x = flota.get(droneElegido).getGps().x;
+        int y = flota.get(droneElegido).getGps().y;
+
+        return mapa[x+pos[0]][y+pos[1]] == Celda.OBSTACULO;
     }
 
     private void faseObjetivoEncontrado() {
