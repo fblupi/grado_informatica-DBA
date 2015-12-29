@@ -372,10 +372,23 @@ public class AdmiralAckbar extends SingleAgent {
 	imagen.cerrar();
     }
 
+    /**
+     * Comprueba si se ha encontrado el objetivo en el mapa global 
+     *
+     * @author Francisco Javier Bolívar
+     * @return punto donde se encuentra el objetivo, null si no lo encuentra
+     */
     private Point objetivoEncontrado() {
 	Point p = null;
-	p.x = p.y = 0;
-	//
+        for (int i = 0; i < TAMANO_MAPA; i++) {
+            for (int j = 0; j < TAMANO_MAPA; j++) {
+                if (mapa[i][j] == Celda.OBJETIVO) {
+                    p.x = i;
+                    p.y = j;
+                    return p;
+                }
+            }
+        }
 	return p;
     }
 
