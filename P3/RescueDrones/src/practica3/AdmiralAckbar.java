@@ -3,6 +3,7 @@ package practica3;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
+import java.awt.Point;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,10 +21,9 @@ public class AdmiralAckbar extends SingleAgent {
     private Celda[][] mapa = new Celda[TAMANO_MAPA][TAMANO_MAPA];
     private boolean terminar, buscando;
     private String mundoAVisitar;
-    private Estado estadoActual;
     private Imagen imagen;
     private String droneElegido;
-    public Estado _estadoActual, _estadoencontrado, _estadobusqueda;
+    private Estado estadoActual, subEstadoBuscando, subEstadoEncontrado;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
 	super(id);
@@ -42,57 +42,53 @@ public class AdmiralAckbar extends SingleAgent {
 	flota.put("Drone1", null);
 	flota.put("Drone2", null);
 	flota.put("Drone3", null);
-	_estadoActual = Estado.INICIAL;
+	estadoActual = Estado.INICIAL;
     }
 
     public void execute() {
-	System.out.println("Execute terminar: " + terminar + " fase: " + _estadoActual);
+	System.out.println("Execute terminar: " + terminar + " fase: " + estadoActual);
 	while (!terminar) {
-	    switch (_estadoActual) {
+	    switch (estadoActual) {
 		case INICIAL:
 		    faseInicial();
 		    break;
 
 		case BUSCAR:
-		    while (buscando) {
-			switch (_estadobusqueda) {
-			    case OBJETIVO_ENCONTRADO:
-				buscando = false;
-				faseObjetivoEncontrado();
-				break;
-			    case ELECCION_DRONE:
-				faseEleccionDrone();
-				break;
-			    case MOVER:
-				faseMover();
-				break;
-			    case REPOSTAR:
-				faseRepostar();
-				break;
-			    case PERCIBIR:
-				fasePercibir();
-				break;
-			}
+		    switch (subEstadoBuscando) {
+			case OBJETIVO_ENCONTRADO:
+			    buscando = false;
+			    faseObjetivoEncontrado();
+			    break;
+			case ELECCION_DRONE:
+			    faseEleccionDrone();
+			    break;
+			case MOVER:
+			    faseMover();
+			    break;
+			case REPOSTAR:
+			    faseRepostar();
+			    break;
+			case PERCIBIR:
+			    fasePercibir();
+			    objetivoEncontrado();
+			    break;
 		    }
 		    break;
 		case OBJETIVO_ENCONTRADO:
-		    while (!buscando) {
-			switch (_estadoencontrado) {
-			    case ELECCION_DRONE:
-				faseEleccionDrone();
-				break;
-			    case MOVER:
-				faseMover();
-				break;
-			    case REPOSTAR:
-				faseRepostar();
-				break;
-			    case PERCIBIR:
-				fasePercibir();
-				break;
-			}
+		    switch (subEstadoEncontrado) {
+			case ELECCION_DRONE:
+			    faseEleccionDrone();
+			    break;
+			case MOVER:
+			    faseMover();
+			    break;
+			case REPOSTAR:
+			    faseRepostar();
+			    break;
+			case PERCIBIR:
+			    fasePercibir();
+			    break;
 		    }
-
 		    break;
 		case FINALIZAR:
 		    faseFinalizar();
@@ -164,7 +160,7 @@ public class AdmiralAckbar extends SingleAgent {
 	    }
 	} catch (InterruptedException ex) {
 	    System.err.println(ex.toString());
-	    _estadoActual = Estado.FINALIZAR;
+	    estadoActual = Estado.FINALIZAR;
 	}
     }
 
@@ -195,7 +191,7 @@ public class AdmiralAckbar extends SingleAgent {
 	    }
 	} catch (InterruptedException ex) {
 	    System.err.println(ex.toString());
-	    _estadoActual = Estado.FINALIZAR;
+	    estadoActual = Estado.FINALIZAR;
 	}
     }
 
@@ -205,7 +201,7 @@ public class AdmiralAckbar extends SingleAgent {
 	mapa[posX][posY] = Celda.getRecorrido(percepcion.getNombreDrone());   // Guarda posición actual como posición por donde ha pasado
 	int[][] radar = percepcion.getRadar();
 	int tam = radar.length;
-	for (int i = 0, y = posY - tam / 2; i < tam; i++, y++) {  
+	for (int i = 0, y = posY - tam / 2; i < tam; i++, y++) {
 	    for (int j = 0, x = posX - tam / 2; j < tam; j++, x++) {
 		if ((x >= 0 && x < TAMANO_MAPA) && (y >= 0 && y < TAMANO_MAPA)) { // No se sale del límite
 		    if (mapa[x][y] == Celda.DESCONOCIDA) { // No machaca pasos anteriores
@@ -262,9 +258,9 @@ public class AdmiralAckbar extends SingleAgent {
     private void faseInicial() {
 	iniciarConversacion();
 	inicializarPropiedadesDrone();
-	if (_estadoActual != Estado.FINALIZAR) {
+	if (estadoActual != Estado.FINALIZAR) {
 //	    _estadoActual = Estado.BUSCAR;
-	    _estadoActual = Estado.FINALIZAR;
+	    estadoActual = Estado.FINALIZAR;
 	}
     }
 
@@ -273,7 +269,21 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void fasePercibir() {
-	throw new UnsupportedOperationException();
+	try {
+	    ACLMessage message = receiveACLMessage();
+	    if (message.getPerformativeInt() == ACLMessage.INFORM) {
+		String nombreDrone = message.getSender().name;
+		PropiedadesDrone propiedades = flota.get(nombreDrone);
+		Percepcion percepcion = JSON.getPercepcion(message.getContent());
+		percepcion.setNombreDrone(nombreDrone);
+		propiedades.actualizarPercepcion(percepcion);
+		flota.put(nombreDrone, propiedades);
+		actualizarMapa(percepcion);
+	    }
+	} catch (InterruptedException ex) {
+	    System.err.println(ex.toString());
+	    estadoActual = Estado.FINALIZAR;
+	}
     }
 
     private void faseRepostar() {
@@ -348,5 +358,12 @@ public class AdmiralAckbar extends SingleAgent {
 	}
 	imagen.guardarPNG("seguimiento/" + mundoAVisitar + " - " + JSON.getKey() + ".png");
 	imagen.cerrar();
+    }
+
+    private Point objetivoEncontrado() {
+	Point p = null;
+	p.x = p.y = 0;
+	//
+	return p;
     }
 }
