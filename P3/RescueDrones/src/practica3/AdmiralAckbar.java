@@ -398,9 +398,11 @@ public class AdmiralAckbar extends SingleAgent {
 	// generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
 	//llamas a la funcion generar scanner
     }
-    
+    /**
+     * Genera el escáner del mapa completo hacia el puntoObjetivo
+     * @author Amanda Fernández Piedra
+     */
     private void generarScanner(Point puntoObjetivo){
-        int distancia =0;
         for(int i=0; i<TAMANO_MAPA; i++){
             for(int j=0;j<TAMANO_MAPA; j++){
                 Point puntoAux = new Point(i,j);
