@@ -24,4 +24,8 @@ public enum Rol {
     public int getConsumo() {
         return this.consumo;
     }
+
+    public int getId() {
+	return id;
+    }
 }

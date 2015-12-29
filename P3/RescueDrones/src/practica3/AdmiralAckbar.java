@@ -28,7 +28,7 @@ public class AdmiralAckbar extends SingleAgent {
     private String droneElegido;
     private Estado estadoActual, subEstadoBuscando, subEstadoEncontrado;
     private int pasos = 0;
-    private int pasosMaximos =0;
+    private int pasosMaximos = 0;
     private Point puntoObjetivo = null;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
@@ -193,9 +193,9 @@ public class AdmiralAckbar extends SingleAgent {
 		    percepcion.setNombreDrone(nombreDrone);
 		    propiedades.actualizarPercepcion(percepcion);
 		    flota.put(nombreDrone, propiedades);
-		    if(percepcion.getGps().x == 99){
+		    if (percepcion.getGps().x == 99) {
 			tamanoMapa = 100;
-		    }else if(percepcion.getGps().x == 499 || percepcion.getGps().y >= 100){
+		    } else if (percepcion.getGps().x == 499 || percepcion.getGps().y >= 100) {
 			tamanoMapa = 500;
 		    }
 		    actualizarMapa(percepcion);
@@ -279,7 +279,35 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void faseEleccionDrone() {
-	throw new UnsupportedOperationException();
+	if (buscando) {
+	    int rolMax = -1;
+	    int distanciaMin = Integer.MAX_VALUE, x, y, distancia;
+	    for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) {
+		String nombre = par.getKey();
+		PropiedadesDrone propiedades = par.getValue();
+
+		x = propiedades.getGps().x;
+		y = propiedades.getGps().y;
+		distancia = Math.abs(x - y);
+		if (propiedades.getLlegado()) {
+		    distanciaMin = 0;
+		    rolMax = propiedades.getRol().getId();
+		    droneElegido = nombre;
+		} else if (propiedades.getRol().getId() == rolMax) {
+		    if (distancia < distanciaMin) {
+			distanciaMin = distancia;
+			rolMax = propiedades.getRol().getId();
+			droneElegido = nombre;
+		    }
+		} else if (propiedades.getRol().getId() > rolMax) {
+		    distanciaMin = distancia;
+		    rolMax = propiedades.getRol().getId();
+		    droneElegido = nombre;
+		}
+	    }
+	} else {
+
+	}
     }
 
     private void fasePercibir() {
@@ -375,60 +403,65 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
-     * Comprueba si se ha encontrado el objetivo en el mapa global 
+     * Comprueba si se ha encontrado el objetivo en el mapa global
      *
      * @author Francisco Javier Bolívar
      * @return punto donde se encuentra el objetivo, null si no lo encuentra
      */
     private Point objetivoEncontrado() {
 	Point p = null;
-        for (int i = 0; i < TAMANO_MAPA; i++) {
-            for (int j = 0; j < TAMANO_MAPA; j++) {
-                if (mapa[i][j] == Celda.OBJETIVO) {
-                    p.x = i;
-                    p.y = j;
-                    return p;
-                }
-            }
-        }
+	for (int i = 0; i < TAMANO_MAPA; i++) {
+	    for (int j = 0; j < TAMANO_MAPA; j++) {
+		if (mapa[i][j] == Celda.OBJETIVO) {
+		    p.x = i;
+		    p.y = j;
+		    return p;
+		}
+	    }
+	}
 	return p;
     }
-     /**
+
+    /**
      * Genera el punto objetivo para la busqueda
+     *
      * @author Antonio David López Machado
      */
-     private void generarPuntoObjetivo() {
+    private void generarPuntoObjetivo() {
 	Point p = null;
-        p.x=flota.get(droneElegido).getGps().x;
-        p.y=flota.get(droneElegido).getGps().y;
-        if(pasos > pasosMaximos){
-            pasos=0;
-            if(p.x < tamanoMapa/2 ){
-                puntoObjetivo.x=tamanoMapa;
-            }
-            else puntoObjetivo.x=0;
-            
-            Random posy = new Random();
-            puntoObjetivo.y = posy.nextInt(tamanoMapa);
+	p.x = flota.get(droneElegido).getGps().x;
+	p.y = flota.get(droneElegido).getGps().y;
+	if (pasos > pasosMaximos) {
+	    pasos = 0;
+	    if (p.x < tamanoMapa / 2) {
+		puntoObjetivo.x = tamanoMapa;
+	    } else {
+		puntoObjetivo.x = 0;
+	    }
+
+	    Random posy = new Random();
+	    puntoObjetivo.y = posy.nextInt(tamanoMapa);
         // generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
-	//llamas a la funcion generar scanner
-            generarScanner();
-        }
+	    //llamas a la funcion generar scanner
+	    generarScanner();
+	}
 	//si pasos < pasos Maximo 
-	
+
     }
+
     /**
      * Genera el escáner del mapa completo hacia el puntoObjetivo
+     *
      * @author Amanda Fernández Piedra
      */
-    private void generarScanner(){
-        for(int i=0; i<TAMANO_MAPA; i++){
-            for(int j=0;j<TAMANO_MAPA; j++){
-                Point puntoAux = new Point(i,j);
-                double distanciaAux = puntoAux.distance(puntoObjetivo);
-                scanner[i][j] = distanciaAux;
-            }
-        }
-        
+    private void generarScanner() {
+	for (int i = 0; i < TAMANO_MAPA; i++) {
+	    for (int j = 0; j < TAMANO_MAPA; j++) {
+		Point puntoAux = new Point(i, j);
+		double distanciaAux = puntoAux.distance(puntoObjetivo);
+		scanner[i][j] = distanciaAux;
+	    }
+	}
+
     }
 }
