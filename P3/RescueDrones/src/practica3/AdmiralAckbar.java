@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class AdmiralAckbar extends SingleAgent {
 
@@ -27,7 +28,8 @@ public class AdmiralAckbar extends SingleAgent {
     private String droneElegido;
     private Estado estadoActual, subEstadoBuscando, subEstadoEncontrado;
     private int pasos = 0;
-    private int pasosMaximos;
+    private int pasosMaximos =0;
+    private Point puntoObjetivo = null;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
 	super(id);
@@ -391,18 +393,35 @@ public class AdmiralAckbar extends SingleAgent {
         }
 	return p;
     }
-
-    private void generarPuntoObjetivo() {
-	throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	//si pasos < pasos Maximo 
-	// generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
+     /**
+     * Genera el punto objetivo para la busqueda
+     * @author Antonio David López Machado
+     */
+     private void generarPuntoObjetivo() {
+	Point p = null;
+        p.x=flota.get(droneElegido).getGps().x;
+        p.y=flota.get(droneElegido).getGps().y;
+        if(pasos > pasosMaximos){
+            pasos=0;
+            if(p.x < tamanoMapa/2 ){
+                puntoObjetivo.x=tamanoMapa;
+            }
+            else puntoObjetivo.x=0;
+            
+            Random posy = new Random();
+            puntoObjetivo.y = posy.nextInt(tamanoMapa);
+        // generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
 	//llamas a la funcion generar scanner
+            generarScanner();
+        }
+	//si pasos < pasos Maximo 
+	
     }
     /**
      * Genera el escáner del mapa completo hacia el puntoObjetivo
      * @author Amanda Fernández Piedra
      */
-    private void generarScanner(Point puntoObjetivo){
+    private void generarScanner(){
         for(int i=0; i<TAMANO_MAPA; i++){
             for(int j=0;j<TAMANO_MAPA; j++){
                 Point puntoAux = new Point(i,j);
