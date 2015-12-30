@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -82,7 +83,6 @@ public class AdmiralAckbar extends SingleAgent {
 			    objetivoEncontrado();
 			    break;
 			case OBJETIVO_ENCONTRADO:
-			    buscando = false;
 			    faseObjetivoEncontrado();
 			    break;
 		    }
@@ -91,6 +91,13 @@ public class AdmiralAckbar extends SingleAgent {
 		    switch (subEstadoEncontrado) {
 			case ELECCION_DRONE:
 			    faseEleccionDrone();
+			    if (droneElegido.equals("")) {
+				estadoActual = Estado.FINALIZAR;
+			    } else {
+				System.out.println("El dron elegido es: " + droneElegido);
+				System.out.println("");
+				subEstadoEncontrado = Estado.MOVER;
+			    }
 			    break;
 			case MOVER:
 			    faseMover();
@@ -249,11 +256,11 @@ public class AdmiralAckbar extends SingleAgent {
 	Point posActual = flota.get(droneElegido).getGps();
 	int posX = posActual.x;
 	int posY = posActual.y;
-	System.out.println("\t\t\tPosicion actual: " + posActual.toString());
+//	System.out.println("\t\t\tPosicion actual: " + posActual.toString());
 	for (int y = posY - 1; y <= posY + 1; y++) {
 	    for (int x = posX - 1; x <= posX + 1; x++) {
 		if (x >= 0 && x < TAMANO_MAPA && y >= 0 && y < TAMANO_MAPA) {
-		    System.out.print(mapa[x][y] + " (" + scanner[x][y] + ") " );
+//		    System.out.print(mapa[x][y] + " (" + scanner[x][y] + ") ");
 		    if (mapa[x][y] != Celda.OBSTACULO && mapa[x][y] != Celda.PARED) {
 			decisionLocal = parserCoordMov(x - posX, y - posY);
 			if (scanner[x][y] <= distanciaNormal) {
@@ -265,10 +272,10 @@ public class AdmiralAckbar extends SingleAgent {
 			    distanciaPared = scanner[x][y]; // Actualiza la distancia de la casilla más cercana
 			}
 		    }
-		    System.out.println(decisionLocal + " ");
+//		    System.out.println(decisionLocal + " ");
 		}
 	    }
-	    System.out.println("");
+//	    System.out.println("");
 	}
 
 	if (moviendoPorPared) {
@@ -352,14 +359,14 @@ public class AdmiralAckbar extends SingleAgent {
     private void faseEleccionDrone() {
 	if (buscando) {
 	    int rolMax = -1;
-	    int distanciaMin = Integer.MAX_VALUE, x, y, distancia;
+	    int distanciaMin = Integer.MAX_VALUE, x, distancia;
 	    for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) {
 		String nombre = par.getKey();
 		PropiedadesDrone propiedades = par.getValue();
 
 		x = propiedades.getGps().x;
-		y = propiedades.getGps().y;
-		distancia = Math.abs(x - y);
+		distancia = Math.min(x, Math.abs(tamanoMapa - x));
+
 		if (propiedades.getLlegado()) {
 		    distanciaMin = 0;
 		    rolMax = propiedades.getRol().getId();
@@ -377,8 +384,40 @@ public class AdmiralAckbar extends SingleAgent {
 		}
 	    }
 	} else {
-
+	    droneElegido = "";
+	    HashMap<String, Integer> distancias = new HashMap<>();
+	    distancias = calcularDistancias();
+	    for (Map.Entry<String, Integer> par : distancias.entrySet()) {
+		String nombre = par.getKey();
+		Integer distancia = par.getValue();
+		System.out.println(nombre + " -> " + distancia);
+		if (distancia < flota.get(nombre).getBateria()) {
+		    droneElegido = nombre;
+		}
+	    }
+	    if (droneElegido.equals("")) {
+		if (!distancias.isEmpty()) {
+		    droneElegido = (String) distancias.keySet().toArray()[0];
+		}
+	    }
 	}
+    }
+
+    private HashMap<String, Integer> calcularDistancias() {
+	HashMap<String, Integer> distancias = new HashMap<>();
+	for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) {
+	    String nombre = par.getKey();
+	    PropiedadesDrone propiedades = par.getValue();
+	    if (!propiedades.getLlegado()) {
+		distancias.put(nombre, calcularDistancia(propiedades));
+	    }
+	}
+	return distancias;
+    }
+
+    private int calcularDistancia(PropiedadesDrone propiedades) {
+	int distancia = (int) distancia(propiedades.getGps(), puntoObjetivo);
+	return distancia * propiedades.getRol().getConsumo();
     }
 
     private void fasePercibir() {
@@ -393,7 +432,6 @@ public class AdmiralAckbar extends SingleAgent {
 		propiedades.actualizarPercepcion(percepcion);
 		flota.put(nombreDrone, propiedades);
 		actualizarMapa(percepcion);
-		imagen.actualizarMapa(mapa);
 	    }
 	} catch (InterruptedException ex) {
 	    System.err.println(ex.toString());
@@ -496,7 +534,10 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void faseObjetivoEncontrado() {
-	throw new UnsupportedOperationException();
+	if (buscando) {
+	    buscando = false;
+	    estadoActual = Estado.OBJETIVO_ENCONTRADO;
+	}
     }
 
     private void faseFinalizar() {
@@ -581,23 +622,26 @@ public class AdmiralAckbar extends SingleAgent {
      * @author Antonio David López Machado
      */
     private void generarPuntoObjetivo() {
-	System.out.println("\t\tPASOS: " + pasos + " maximos " + pasosMaximos);
+//	System.out.println("\t\tPASOS: " + pasos + " maximos " + pasosMaximos);
 	if (pasos >= pasosMaximos || flota.get(droneElegido).getGps().equals(puntoObjetivo)) {
 	    puntoObjetivo = new Point();
 	    Point p = flota.get(droneElegido).getGps();
 	    pasos = 0;
-	    if (p.y < tamanoMapa / 2) {
-		puntoObjetivo.y = tamanoMapa-1;
+	    Random posX = new Random();
+	    puntoObjetivo.x = posX.nextInt(tamanoMapa / 2);
+	    if (p.x < tamanoMapa / 2) {
+		puntoObjetivo.x += tamanoMapa / 2;
+	    }
+	    if (p.y == 0) {
+		puntoObjetivo.y = tamanoMapa - 1;
 	    } else {
 		puntoObjetivo.y = 0;
 	    }
-	    Random posy = new Random();
-	    puntoObjetivo.x = posy.nextInt(tamanoMapa);
 
 	    pasosMaximos = (int) distancia(p, puntoObjetivo);
 	    // generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
 	    //llamas a la funcion generar scanner
-	    System.out.println("\t\tPuntoObjetivo: " + puntoObjetivo.toString() + " pasos maximos: " + pasosMaximos);
+//	    System.out.println("\t\tPuntoObjetivo: " + puntoObjetivo.toString() + " pasos maximos: " + pasosMaximos);
 	    generarScanner();
 	}
 
