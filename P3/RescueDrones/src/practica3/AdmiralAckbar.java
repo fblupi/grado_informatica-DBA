@@ -47,10 +47,10 @@ public class AdmiralAckbar extends SingleAgent {
 	terminar = false;
 	buscando = true;
 	flota = new HashMap<>();
-	flota.put("Drone30", null);
-	flota.put("Drone31", null);
-	flota.put("Drone32", null);
-	flota.put("Drone33", null);
+	flota.put("Drone40", null);
+	flota.put("Drone41", null);
+	flota.put("Drone42", null);
+	flota.put("Drone43", null);
 	estadoActual = Estado.INICIAL;
 	subEstadoBuscando = Estado.ELECCION_DRONE;
 	subEstadoEncontrado = Estado.ELECCION_DRONE;
@@ -230,7 +230,7 @@ public class AdmiralAckbar extends SingleAgent {
 	for (int i = 0, y = posY - tam / 2; i < tam; i++, y++) {
 	    for (int j = 0, x = posX - tam / 2; j < tam; j++, x++) {
 		if ((x >= 0 && x < TAMANO_MAPA) && (y >= 0 && y < TAMANO_MAPA)) { // No se sale del límite
-		    if (mapa[x][y] != Celda.getRecorrido(percepcion.getNombreDrone())) { // No machaca pasos anteriores
+		    if (mapa[x][y] == Celda.DESCONOCIDA) { // No machaca pasos anteriores
 			mapa[x][y] = Celda.getCelda(radar[i][j]);   // Actualiza casilla con el valor recibido del radar
 		    }
 		}
@@ -261,7 +261,7 @@ public class AdmiralAckbar extends SingleAgent {
 	    for (int x = posX - 1; x <= posX + 1; x++) {
 		if (x >= 0 && x < TAMANO_MAPA && y >= 0 && y < TAMANO_MAPA) {
 //		    System.out.print(mapa[x][y] + " (" + scanner[x][y] + ") ");
-		    if (mapa[x][y] != Celda.OBSTACULO && mapa[x][y] != Celda.PARED) {
+		    if (mapa[x][y] != Celda.OBSTACULO && mapa[x][y] != Celda.PARED && celdaLibre(x, y)) {
 			decisionLocal = parserCoordMov(x - posX, y - posY);
 			if (scanner[x][y] <= distanciaNormal) {
 			    decisionNormal = decisionLocal;
@@ -424,6 +424,7 @@ public class AdmiralAckbar extends SingleAgent {
 	enviarMensaje(droneElegido, ACLMessage.QUERY_REF, JSON.key());
 	try {
 	    ACLMessage message = receiveACLMessage();
+	    System.out.println(message.getPerformative() + ": " + message.getContent());
 	    if (message.getPerformativeInt() == ACLMessage.INFORM) {
 		String nombreDrone = message.getSender().name;
 		PropiedadesDrone propiedades = flota.get(nombreDrone);
@@ -437,24 +438,33 @@ public class AdmiralAckbar extends SingleAgent {
 	    System.err.println(ex.toString());
 	    estadoActual = Estado.FINALIZAR;
 	}
-	subEstadoBuscando = Estado.MOVER;
+	subEstadoBuscando = Estado.REPOSTAR;
+	subEstadoEncontrado = Estado.REPOSTAR;
     }
 
     private void faseRepostar() {
-	enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
-	try {
-	    receiveACLMessage();
-	} catch (InterruptedException ex) {
-	    System.err.println(ex.toString());
-	    estadoActual = Estado.FINALIZAR;
+	PropiedadesDrone propiedades = flota.get(droneElegido);
+	if (!propiedades.getLlegado() && propiedades.getBateria() <= propiedades.getRol().getConsumo()) {
+	    enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
+	    try {
+		ACLMessage message = receiveACLMessage();
+		if (message.getPerformativeInt() != ACLMessage.INFORM) {
+		    System.out.println(message.getPerformative() + ": " + message.getContent());
+		    estadoActual = Estado.FINALIZAR;
+		}
+	    } catch (InterruptedException ex) {
+		System.err.println(ex.toString());
+		estadoActual = Estado.FINALIZAR;
+	    }
 	}
-	subEstadoBuscando = Estado.PERCIBIR;
+	subEstadoBuscando = Estado.MOVER;
+	subEstadoEncontrado = Estado.MOVER;
     }
 
     /**
      * @author Antonio Espinosa
      */
-    private void faseMover() {
+    private void mover() {
 
 	String decision;
 	int[] pos = posicionOptima();
@@ -479,10 +489,16 @@ public class AdmiralAckbar extends SingleAgent {
 	}
 	pasos++;
 	enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.mover(decision));
-	subEstadoBuscando = Estado.REPOSTAR;
+	subEstadoBuscando = Estado.PERCIBIR;
+	subEstadoEncontrado = Estado.PERCIBIR;
 	try {
 	    ACLMessage message = receiveACLMessage();
-	    System.out.println("Mensaje recibido: " + message.getContent());
+	    if (message.getPerformativeInt() != ACLMessage.INFORM) {
+		System.out.println(message.getPerformative() + ": " + message.getContent());
+		estadoActual = Estado.FINALIZAR;
+	    } else {
+		System.out.println("Mensaje recibido: " + message.getContent());
+	    }
 	} catch (InterruptedException ex) {
 	    System.err.println(ex.toString());
 	    estadoActual = Estado.FINALIZAR;
@@ -491,6 +507,71 @@ public class AdmiralAckbar extends SingleAgent {
 //	if (pasos == 100) {
 //	    estadoActual = Estado.FINALIZAR;
 //	}
+    }
+
+    private void moverMosca() {
+
+	String decision = "";
+	String decisionLocal;
+	double distanciaNormal = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
+	Point posActual = flota.get(droneElegido).getGps();
+	int posX = posActual.x;
+	int posY = posActual.y;
+	for (int y = posY - 1; y <= posY + 1; y++) {
+	    for (int x = posX - 1; x <= posX + 1; x++) {
+		if (x >= 0 && x < TAMANO_MAPA && y >= 0 && y < TAMANO_MAPA) {
+		    if (mapa[x][y] != Celda.PARED && celdaLibre(x, y)) {
+			decisionLocal = parserCoordMov(x - posX, y - posY);
+			if (scanner[x][y] <= distanciaNormal) {
+			    decision = decisionLocal;
+			    distanciaNormal = scanner[x][y];
+			}
+		    }
+		}
+	    }
+	}
+	pasos++;
+	enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.mover(decision));
+	subEstadoBuscando = Estado.PERCIBIR;
+	subEstadoEncontrado = Estado.PERCIBIR;
+	try {
+	    ACLMessage message = receiveACLMessage();
+	    if (message.getPerformativeInt() != ACLMessage.INFORM) {
+		System.out.println(message.getPerformative() + ": " + message.getContent());
+		estadoActual = Estado.FINALIZAR;
+	    } else {
+		System.out.println("Mensaje recibido: " + message.getContent());
+	    }
+	} catch (InterruptedException ex) {
+	    System.err.println(ex.toString());
+	    estadoActual = Estado.FINALIZAR;
+	}
+    }
+
+    private void faseMover() {
+	if (buscando) {
+	    mover();
+	} else {
+	    PropiedadesDrone propiedades = flota.get(droneElegido);
+	    if (propiedades.getLlegado()) {
+		subEstadoEncontrado = Estado.ELECCION_DRONE;
+	    } else {
+		if (propiedades.getRol() == Rol.MOSCA) {
+		    moverMosca();
+		} else {
+		    mover();
+		}
+	    }
+	}
+    }
+
+    private boolean celdaLibre(int x, int y) {
+	for (PropiedadesDrone propiedades : flota.values()) {
+	    if (propiedades.getGps().x == x && propiedades.getGps().y == y) {
+		return false;
+	    }
+	}
+	return true;
     }
 
     /**

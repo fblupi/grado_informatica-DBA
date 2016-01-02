@@ -19,9 +19,9 @@ public class main {
 
 	    AgentsConnection.connect("isg2.ugr.es", 6000, "Cerastes", "Unicornio", "Matute", false);
 	    try {
-		ackbar = new AdmiralAckbar(new AgentID("Ackbar__"), mundo);
+		ackbar = new AdmiralAckbar(new AgentID("Ackbar___"), mundo);
 		for (int i = 0; i < drones.length; i++) {
-		    drones[i] = new Drone(new AgentID("Drone3" + i));
+		    drones[i] = new Drone(new AgentID("Drone4" + i));
 		    drones[i].start();
 		}
 		ackbar.start();
