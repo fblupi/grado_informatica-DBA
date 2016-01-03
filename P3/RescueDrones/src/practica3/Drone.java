@@ -6,7 +6,7 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 
 public class Drone extends SingleAgent {
 
-    private final String NOMBRE_CONTROLADOR = "Ackbar___";
+    private final String NOMBRE_CONTROLADOR = "Ackbar____";
     private final String NOMBRE_SERVIDOR = "Cerastes";
     boolean terminar;
     private ACLMessage inbox, outbox;

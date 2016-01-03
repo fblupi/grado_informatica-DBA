@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -47,10 +46,10 @@ public class AdmiralAckbar extends SingleAgent {
 	terminar = false;
 	buscando = true;
 	flota = new HashMap<>();
-	flota.put("Drone40", null);
-	flota.put("Drone41", null);
-	flota.put("Drone42", null);
-	flota.put("Drone43", null);
+	flota.put("Drone50", null);
+	flota.put("Drone51", null);
+	flota.put("Drone52", null);
+	flota.put("Drone53", null);
 	estadoActual = Estado.INICIAL;
 	subEstadoBuscando = Estado.ELECCION_DRONE;
 	subEstadoEncontrado = Estado.ELECCION_DRONE;
@@ -685,16 +684,43 @@ public class AdmiralAckbar extends SingleAgent {
      */
     private void objetivoEncontrado() {
 	boolean encontrado = false;
-	for (int i = 0; i < TAMANO_MAPA && !encontrado; i++) {
-	    for (int j = 0; j < TAMANO_MAPA && !encontrado; j++) {
+	int xMin = tamanoMapa, xMax = 0, yMin = tamanoMapa, yMax = 0;
+	for (int i = 0; i < tamanoMapa; i++) {
+	    for (int j = 0; j < tamanoMapa; j++) {
 		if (mapa[j][i] == Celda.OBJETIVO) {
-		    puntoObjetivo = new Point(j, i);
-		    generarScanner();
+		    if (j < xMin) {
+			xMin = j;
+		    }
+		    if (j > xMax) {
+			xMax = j;
+		    }
+		    if (i < yMin) {
+			yMin = i;
+		    }
+		    if (i > yMax) {
+			yMax = i;
+		    }
 		    encontrado = true;
-		    subEstadoBuscando = Estado.OBJETIVO_ENCONTRADO;
 		}
 	    }
 	}
+	if (encontrado) {
+	    int j = (xMax+xMin)/2;
+	    int i = (yMax+yMin)/2;
+	    puntoObjetivo = new Point(j, i);
+	    generarScanner();
+	    subEstadoBuscando = Estado.OBJETIVO_ENCONTRADO;
+	}
+//	for (int i = 0; i < TAMANO_MAPA && !encontrado; i++) {
+//	    for (int j = 0; j < TAMANO_MAPA && !encontrado; j++) {
+//		if (mapa[j][i] == Celda.OBJETIVO) {
+//		    puntoObjetivo = new Point(j, i);
+//		    generarScanner();
+//		    encontrado = true;
+//		    subEstadoBuscando = Estado.OBJETIVO_ENCONTRADO;
+//		}
+//	    }
+//	}
     }
 
     /**
@@ -708,11 +734,12 @@ public class AdmiralAckbar extends SingleAgent {
 	    puntoObjetivo = new Point();
 	    Point p = flota.get(droneElegido).getGps();
 	    pasos = 0;
-	    Random posX = new Random();
-	    puntoObjetivo.x = posX.nextInt(tamanoMapa / 2);
+	    Random random = new Random();
+	    puntoObjetivo.x = random.nextInt(tamanoMapa / 2);
 	    if (p.x < tamanoMapa / 2) {
 		puntoObjetivo.x += tamanoMapa / 2;
 	    }
+//	    p.y = random.nextInt(tamanoMapa);
 	    if (p.y == 0) {
 		puntoObjetivo.y = tamanoMapa - 1;
 	    } else {
