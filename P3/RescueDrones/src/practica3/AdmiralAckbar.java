@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 
 public class AdmiralAckbar extends SingleAgent {
 
@@ -32,6 +33,9 @@ public class AdmiralAckbar extends SingleAgent {
     private Point puntoObjetivo = null;
     private boolean moviendoPorPared = false;
     private double miPrimerScannerPared;
+    private Point posicionAnterior = new Point(50, 50);
+    private boolean moverUnaCasilla = true;
+    private int dronesEnObjetivo = 0;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
 	super(id);
@@ -46,10 +50,10 @@ public class AdmiralAckbar extends SingleAgent {
 	terminar = false;
 	buscando = true;
 	flota = new HashMap<>();
-	flota.put("Drone50", null);
-	flota.put("Drone51", null);
-	flota.put("Drone52", null);
-	flota.put("Drone53", null);
+	flota.put("Drone60", null);
+	flota.put("Drone61", null);
+	flota.put("Drone62", null);
+	flota.put("Drone63", null);
 	estadoActual = Estado.INICIAL;
 	subEstadoBuscando = Estado.ELECCION_DRONE;
 	subEstadoEncontrado = Estado.ELECCION_DRONE;
@@ -223,7 +227,9 @@ public class AdmiralAckbar extends SingleAgent {
     private void actualizarMapa(Percepcion percepcion) {
 	int posX = percepcion.getGps().x;
 	int posY = percepcion.getGps().y;
-	mapa[posX][posY] = Celda.getRecorrido(percepcion.getNombreDrone());   // Guarda posición actual como posición por donde ha pasado
+	if (mapa[posX][posY] != Celda.OBSTACULO) {
+	    mapa[posX][posY] = Celda.getRecorrido(percepcion.getNombreDrone());   // Guarda posición actual como posición por donde ha pasado
+	}
 	int[][] radar = percepcion.getRadar();
 	int tam = radar.length;
 	for (int i = 0, y = posY - tam / 2; i < tam; i++, y++) {
@@ -256,12 +262,15 @@ public class AdmiralAckbar extends SingleAgent {
 	int posX = posActual.x;
 	int posY = posActual.y;
 //	System.out.println("\t\t\tPosicion actual: " + posActual.toString());
-	for (int y = posY - 1; y <= posY + 1; y++) {
-	    for (int x = posX - 1; x <= posX + 1; x++) {
+	for (int x = posX - 1; x <= posX + 1; x++) {
+	    for (int y = posY - 1; y <= posY + 1; y++) {
+
 		if (x >= 0 && x < TAMANO_MAPA && y >= 0 && y < TAMANO_MAPA) {
-//		    System.out.print(mapa[x][y] + " (" + scanner[x][y] + ") ");
-		    if (mapa[x][y] != Celda.OBSTACULO && mapa[x][y] != Celda.PARED && celdaLibre(x, y)) {
+		    System.out.print(mapa[x][y]);
+		    if (mapa[x][y] != Celda.OBSTACULO && mapa[x][y] != Celda.PARED && mapa[x][y] != Celda.getRecorrido(droneElegido) && celdaLibre(x, y)
+			    && (x != posicionAnterior.x || y != posicionAnterior.y)) {
 			decisionLocal = parserCoordMov(x - posX, y - posY);
+			System.out.print(" -> " + decisionLocal);
 			if (scanner[x][y] <= distanciaNormal) {
 			    decisionNormal = decisionLocal;
 			    distanciaNormal = scanner[x][y];
@@ -271,7 +280,7 @@ public class AdmiralAckbar extends SingleAgent {
 			    distanciaPared = scanner[x][y]; // Actualiza la distancia de la casilla más cercana
 			}
 		    }
-//		    System.out.println(decisionLocal + " ");
+		    System.out.println("");
 		}
 	    }
 //	    System.out.println("");
@@ -386,17 +395,24 @@ public class AdmiralAckbar extends SingleAgent {
 	    droneElegido = "";
 	    HashMap<String, Integer> distancias = new HashMap<>();
 	    distancias = calcularDistancias();
-	    for (Map.Entry<String, Integer> par : distancias.entrySet()) {
-		String nombre = par.getKey();
-		Integer distancia = par.getValue();
-		System.out.println(nombre + " -> " + distancia);
-		if (distancia < flota.get(nombre).getBateria()) {
+	    for (String nombre : distancias.keySet()) {
+		if (flota.get(nombre).getRol() == Rol.MOSCA) {
 		    droneElegido = nombre;
 		}
 	    }
 	    if (droneElegido.equals("")) {
-		if (!distancias.isEmpty()) {
-		    droneElegido = (String) distancias.keySet().toArray()[0];
+		for (Map.Entry<String, Integer> par : distancias.entrySet()) {
+		    String nombre = par.getKey();
+		    Integer distancia = par.getValue();
+		    System.out.println(nombre + " -> " + distancia);
+		    if (distancia < flota.get(nombre).getBateria()) {
+			droneElegido = nombre;
+		    }
+		}
+		if (droneElegido.equals("")) {
+		    if (!distancias.isEmpty()) {
+			droneElegido = (String) distancias.keySet().toArray()[0];
+		    }
 		}
 	    }
 	}
@@ -460,6 +476,16 @@ public class AdmiralAckbar extends SingleAgent {
 	subEstadoEncontrado = Estado.MOVER;
     }
 
+    private void reiniciarMapa() {
+	for (int i = 0; i < TAMANO_MAPA; i++) {
+	    for (int j = 0; j < TAMANO_MAPA; j++) {
+		if (mapa[j][i] == Celda.getRecorrido(droneElegido)) {
+		    mapa[j][i] = Celda.LIBRE;
+		}
+	    }
+	}
+    }
+
     /**
      * @author Antonio Espinosa
      */
@@ -486,6 +512,10 @@ public class AdmiralAckbar extends SingleAgent {
 	    }
 	    decision = elegirMovimiento();
 	}
+	if (decision.equals("logout")) {
+	    reiniciarMapa();
+	    mover();
+	}
 	pasos++;
 	enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.mover(decision));
 	subEstadoBuscando = Estado.PERCIBIR;
@@ -509,7 +539,6 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     private void moverMosca() {
-
 	String decision = "";
 	String decisionLocal;
 	double distanciaNormal = Float.MAX_VALUE; // Se inicia a un valor muy alto para que la primera disponible se guarde aquí
@@ -519,7 +548,7 @@ public class AdmiralAckbar extends SingleAgent {
 	for (int y = posY - 1; y <= posY + 1; y++) {
 	    for (int x = posX - 1; x <= posX + 1; x++) {
 		if (x >= 0 && x < TAMANO_MAPA && y >= 0 && y < TAMANO_MAPA) {
-		    if (mapa[x][y] != Celda.PARED && celdaLibre(x, y)) {
+		    if (mapa[x][y] != Celda.PARED && mapa[x][y] != Celda.getRecorrido(droneElegido) && celdaLibre(x, y)) {
 			decisionLocal = parserCoordMov(x - posX, y - posY);
 			if (scanner[x][y] <= distanciaNormal) {
 			    decision = decisionLocal;
@@ -547,13 +576,77 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    private void moverTeclado() {
+	String decision = "";
+	Scanner scanner = new Scanner(System.in);
+	while (decision.equals("")) {
+	    String letra = scanner.nextLine();
+	    if (letra.length() > 0) {
+		switch (letra.charAt(0)) {
+		    case 'a':
+			decision = "moveW";
+			break;
+		    case 's':
+			decision = "moveS";
+			break;
+		    case 'd':
+			decision = "moveE";
+			break;
+		    case 'q':
+			decision = "moveNW";
+			break;
+		    case 'w':
+			decision = "moveN";
+			break;
+		    case 'e':
+			decision = "moveNE";
+			break;
+		    case 'z':
+			decision = "moveSW";
+			break;
+		    case 'c':
+			decision = "moveSE";
+			break;
+		}
+	    }
+	}
+
+	pasos++;
+	enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.mover(decision));
+	subEstadoBuscando = Estado.PERCIBIR;
+	subEstadoEncontrado = Estado.PERCIBIR;
+	try {
+	    ACLMessage message = receiveACLMessage();
+	    if (message.getPerformativeInt() != ACLMessage.INFORM) {
+		System.out.println(message.getPerformative() + ": " + message.getContent());
+		estadoActual = Estado.FINALIZAR;
+	    } else {
+		System.out.println("Mensaje recibido: " + message.getContent());
+	    }
+	} catch (InterruptedException ex) {
+	    System.err.println(ex.toString());
+	    estadoActual = Estado.FINALIZAR;
+	}
+    }
+
     private void faseMover() {
 	if (buscando) {
 	    mover();
 	} else {
 	    PropiedadesDrone propiedades = flota.get(droneElegido);
 	    if (propiedades.getLlegado()) {
-		subEstadoEncontrado = Estado.ELECCION_DRONE;
+		if (moverUnaCasilla && dronesEnObjetivo < flota.size() - 1) {
+		    moverUnaCasilla = false;
+		    if (propiedades.getRol() == Rol.MOSCA) {
+			moverMosca();
+		    } else {
+			mover();
+		    }
+		} else {
+		    dronesEnObjetivo++;
+		    moverUnaCasilla = true;
+		    subEstadoEncontrado = Estado.ELECCION_DRONE;
+		}
 	    } else {
 		if (propiedades.getRol() == Rol.MOSCA) {
 		    moverMosca();
@@ -562,6 +655,7 @@ public class AdmiralAckbar extends SingleAgent {
 		}
 	    }
 	}
+	posicionAnterior = flota.get(droneElegido).getGps();
     }
 
     private boolean celdaLibre(int x, int y) {
@@ -705,8 +799,8 @@ public class AdmiralAckbar extends SingleAgent {
 	    }
 	}
 	if (encontrado) {
-	    int j = (xMax+xMin)/2;
-	    int i = (yMax+yMin)/2;
+	    int j = (xMax + xMin) / 2;
+	    int i = (yMax + yMin) / 2;
 	    puntoObjetivo = new Point(j, i);
 	    generarScanner();
 	    subEstadoBuscando = Estado.OBJETIVO_ENCONTRADO;
@@ -723,30 +817,40 @@ public class AdmiralAckbar extends SingleAgent {
 //	}
     }
 
+    private boolean cercaPuntoObjetivo() {
+	return distancia(flota.get(droneElegido).getGps(), puntoObjetivo) <= 3;
+    }
+
     /**
      * Genera el punto objetivo para la busqueda
      *
      * @author Antonio David López Machado
      */
+    boolean primero = true;
+
     private void generarPuntoObjetivo() {
-//	System.out.println("\t\tPASOS: " + pasos + " maximos " + pasosMaximos);
-	if (pasos >= pasosMaximos || flota.get(droneElegido).getGps().equals(puntoObjetivo)) {
+//	System.out.println("\t\tPASOS: " + pasos + " maximos " + pasosMaximos + " cerca: " + cercaPuntoObjetivo());
+	if (pasos >= pasosMaximos || cercaPuntoObjetivo()) {
 	    puntoObjetivo = new Point();
 	    Point p = flota.get(droneElegido).getGps();
 	    pasos = 0;
 	    Random random = new Random();
-	    puntoObjetivo.x = random.nextInt(tamanoMapa / 2);
+//	    puntoObjetivo.x = random.nextInt(tamanoMapa);
 	    if (p.x < tamanoMapa / 2) {
 		puntoObjetivo.x += tamanoMapa / 2;
 	    }
-//	    p.y = random.nextInt(tamanoMapa);
-	    if (p.y == 0) {
-		puntoObjetivo.y = tamanoMapa - 1;
-	    } else {
-		puntoObjetivo.y = 0;
+	    p.y = random.nextInt(tamanoMapa);
+//	    if (p.y == 0) {
+//		puntoObjetivo.y = tamanoMapa - 1;
+//	    } else {
+//		puntoObjetivo.y = 0;
+//	    }
+	    if (primero) {
+		puntoObjetivo.x = 5;
+		puntoObjetivo.y = 5;
+		primero = false;
 	    }
-
-	    pasosMaximos = (int) distancia(p, puntoObjetivo);
+	    pasosMaximos = (int) distancia(p, puntoObjetivo) * 2;
 	    // generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
 	    //llamas a la funcion generar scanner
 //	    System.out.println("\t\tPuntoObjetivo: " + puntoObjetivo.toString() + " pasos maximos: " + pasosMaximos);

@@ -87,7 +87,7 @@ public class Imagen extends JFrame {
 			color = Color.GREEN;
 			break;
 		    case RECORRIDO2:
-			color = Color.YELLOW;
+			color = Color.PINK;
 			break;
 		    case RECORRIDO3:
 			color = Color.BLUE;
@@ -99,10 +99,10 @@ public class Imagen extends JFrame {
 		    case ULT_POSICION1:
 		    case ULT_POSICION2:
 		    case ULT_POSICION3:
-			color = Color.PINK;
+			color = Color.MAGENTA;
 			break;
 		    default:
-			color = Color.MAGENTA;
+			color = Color.YELLOW;
 			break;
 		}
 		bufferedImage.setRGB(i, j, color.getRGB());

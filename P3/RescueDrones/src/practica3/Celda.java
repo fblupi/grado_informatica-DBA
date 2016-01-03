@@ -6,11 +6,11 @@ public enum Celda {
     DESCONOCIDA, ULT_POSICION0, ULT_POSICION1, ULT_POSICION2, ULT_POSICION3;
 
     public static Celda getRecorrido(String nombre) {
-	if (nombre.equals("Drone40")) {
+	if (nombre.equals("Drone60")) {
 	    return RECORRIDO0;
-	} else if (nombre.equals("Drone41")) {
+	} else if (nombre.equals("Drone61")) {
 	    return RECORRIDO1;
-	} else if (nombre.equals("Drone42")) {
+	} else if (nombre.equals("Drone62")) {
 	    return RECORRIDO2;
 	} else {
 	    return RECORRIDO3;
@@ -36,10 +36,10 @@ public enum Celda {
 		celda = LIBRE;
 		break;
 	    case 1:
-		celda = PARED;
+		celda = OBSTACULO;
 		break;
 	    case 2:
-		celda = OBSTACULO;
+		celda = PARED;
 		break;
 	    case 3:
 		celda = OBJETIVO;
