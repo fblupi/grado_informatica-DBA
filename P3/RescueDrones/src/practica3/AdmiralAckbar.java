@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -22,6 +23,7 @@ public class AdmiralAckbar extends SingleAgent {
     private HashMap<String, PropiedadesDrone> flota;
     private int energia;
     private Celda[][] mapa = new Celda[TAMANO_MAPA][TAMANO_MAPA];
+    private double[][] calor = new double[TAMANO_MAPA][TAMANO_MAPA];
     private double[][] scanner = new double[TAMANO_MAPA][TAMANO_MAPA];
     private boolean terminar, buscando;
     private String mundoAVisitar;
@@ -30,7 +32,7 @@ public class AdmiralAckbar extends SingleAgent {
     private Estado estadoActual, subEstadoBuscando, subEstadoEncontrado;
     private int pasos = 0;
     private int pasosMaximos = 0;
-    private Point puntoObjetivo = null;
+    private Point puntoObjetivo = new Point();
     private boolean moviendoPorPared = false;
     private double miPrimerScannerPared;
     private Point posicionAnterior = new Point(50, 50);
@@ -50,10 +52,10 @@ public class AdmiralAckbar extends SingleAgent {
 	terminar = false;
 	buscando = true;
 	flota = new HashMap<>();
-	flota.put("Drone60", null);
-	flota.put("Drone61", null);
-	flota.put("Drone62", null);
-	flota.put("Drone63", null);
+	flota.put("Drone10", null);
+	flota.put("Drone11", null);
+	flota.put("Drone12", null);
+	flota.put("Drone13", null);
 	estadoActual = Estado.INICIAL;
 	subEstadoBuscando = Estado.ELECCION_DRONE;
 	subEstadoEncontrado = Estado.ELECCION_DRONE;
@@ -266,11 +268,11 @@ public class AdmiralAckbar extends SingleAgent {
 	    for (int y = posY - 1; y <= posY + 1; y++) {
 
 		if (x >= 0 && x < TAMANO_MAPA && y >= 0 && y < TAMANO_MAPA) {
-		    System.out.print(mapa[x][y]);
+//		    System.out.print(mapa[x][y]);
 		    if (mapa[x][y] != Celda.OBSTACULO && mapa[x][y] != Celda.PARED && mapa[x][y] != Celda.getRecorrido(droneElegido) && celdaLibre(x, y)
 			    && (x != posicionAnterior.x || y != posicionAnterior.y)) {
 			decisionLocal = parserCoordMov(x - posX, y - posY);
-			System.out.print(" -> " + decisionLocal);
+//			System.out.print(" -> " + decisionLocal);
 			if (scanner[x][y] <= distanciaNormal) {
 			    decisionNormal = decisionLocal;
 			    distanciaNormal = scanner[x][y];
@@ -280,7 +282,7 @@ public class AdmiralAckbar extends SingleAgent {
 			    distanciaPared = scanner[x][y]; // Actualiza la distancia de la casilla más cercana
 			}
 		    }
-		    System.out.println("");
+//		    System.out.println("");
 		}
 	    }
 //	    System.out.println("");
@@ -366,7 +368,7 @@ public class AdmiralAckbar extends SingleAgent {
      */
     private void faseEleccionDrone() {
 	if (buscando) {
-	    int rolMax = -1;
+	    int prioridadMax = -1;
 	    int distanciaMin = Integer.MAX_VALUE, x, distancia;
 	    for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) {
 		String nombre = par.getKey();
@@ -377,24 +379,24 @@ public class AdmiralAckbar extends SingleAgent {
 
 		if (propiedades.getLlegado()) {
 		    distanciaMin = 0;
-		    rolMax = propiedades.getRol().getId();
+		    prioridadMax = propiedades.getRol().getPrioridad();
 		    droneElegido = nombre;
-		} else if (propiedades.getRol().getId() == rolMax) {
+		} else if (propiedades.getRol().getPrioridad() == prioridadMax) {
 		    if (distancia < distanciaMin) {
 			distanciaMin = distancia;
-			rolMax = propiedades.getRol().getId();
+			prioridadMax = propiedades.getRol().getPrioridad();
 			droneElegido = nombre;
 		    }
-		} else if (propiedades.getRol().getId() > rolMax) {
+		} else if (propiedades.getRol().getPrioridad() > prioridadMax) {
 		    distanciaMin = distancia;
-		    rolMax = propiedades.getRol().getId();
+		    prioridadMax = propiedades.getRol().getPrioridad();
 		    droneElegido = nombre;
 		}
 	    }
 	} else {
+	    objetivoEncontrado();
 	    droneElegido = "";
-	    HashMap<String, Integer> distancias = new HashMap<>();
-	    distancias = calcularDistancias();
+	    HashMap<String, Integer> distancias = calcularDistancias();
 	    for (String nombre : distancias.keySet()) {
 		if (flota.get(nombre).getRol() == Rol.MOSCA) {
 		    droneElegido = nombre;
@@ -459,17 +461,32 @@ public class AdmiralAckbar extends SingleAgent {
 
     private void faseRepostar() {
 	PropiedadesDrone propiedades = flota.get(droneElegido);
-	if (!propiedades.getLlegado() && propiedades.getBateria() <= propiedades.getRol().getConsumo()) {
-	    enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
-	    try {
-		ACLMessage message = receiveACLMessage();
-		if (message.getPerformativeInt() != ACLMessage.INFORM) {
-		    System.out.println(message.getPerformative() + ": " + message.getContent());
+	if (!propiedades.getLlegado()) {
+	    System.out.println("\t\tDistancia posicionActual-Objetivo: " + Math.ceil(distancia(propiedades.getGps(), puntoObjetivo)));
+	    if (propiedades.getRol() == Rol.MOSCA && Math.ceil(distancia(propiedades.getGps(), puntoObjetivo)) == 100) {
+		enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
+		try {
+		    ACLMessage message = receiveACLMessage();
+		    if (message.getPerformativeInt() != ACLMessage.INFORM) {
+			System.out.println(message.getPerformative() + ": " + message.getContent());
+			estadoActual = Estado.FINALIZAR;
+		    }
+		} catch (InterruptedException ex) {
+		    System.err.println(ex.toString());
 		    estadoActual = Estado.FINALIZAR;
 		}
-	    } catch (InterruptedException ex) {
-		System.err.println(ex.toString());
-		estadoActual = Estado.FINALIZAR;
+	    } else if (propiedades.getBateria() <= propiedades.getRol().getConsumo()) {
+		enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
+		try {
+		    ACLMessage message = receiveACLMessage();
+		    if (message.getPerformativeInt() != ACLMessage.INFORM) {
+			System.out.println(message.getPerformative() + ": " + message.getContent());
+			estadoActual = Estado.FINALIZAR;
+		    }
+		} catch (InterruptedException ex) {
+		    System.err.println(ex.toString());
+		    estadoActual = Estado.FINALIZAR;
+		}
 	    }
 	}
 	subEstadoBuscando = Estado.MOVER;
@@ -517,25 +534,27 @@ public class AdmiralAckbar extends SingleAgent {
 	    mover();
 	}
 	pasos++;
-	enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.mover(decision));
-	subEstadoBuscando = Estado.PERCIBIR;
-	subEstadoEncontrado = Estado.PERCIBIR;
-	try {
-	    ACLMessage message = receiveACLMessage();
-	    if (message.getPerformativeInt() != ACLMessage.INFORM) {
-		System.out.println(message.getPerformative() + ": " + message.getContent());
-		estadoActual = Estado.FINALIZAR;
-	    } else {
-		System.out.println("Mensaje recibido: " + message.getContent());
-	    }
-	} catch (InterruptedException ex) {
-	    System.err.println(ex.toString());
+	if (decision.equals("logout")) {
+	    System.out.println("No se donde moverme.");
 	    estadoActual = Estado.FINALIZAR;
-	}
+	} else {
+	    enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.mover(decision));
+	    subEstadoBuscando = Estado.PERCIBIR;
+	    subEstadoEncontrado = Estado.PERCIBIR;
+	    try {
+		ACLMessage message = receiveACLMessage();
+		if (message.getPerformativeInt() != ACLMessage.INFORM) {
+		    System.out.println(message.getPerformative() + ": " + message.getContent());
+		    estadoActual = Estado.FINALIZAR;
+		} else {
+		    System.out.println("Mensaje recibido: " + message.getContent());
+		}
+	    } catch (InterruptedException ex) {
+		System.err.println(ex.toString());
+		estadoActual = Estado.FINALIZAR;
+	    }
 
-//	if (pasos == 100) {
-//	    estadoActual = Estado.FINALIZAR;
-//	}
+	}
     }
 
     private void moverMosca() {
@@ -635,7 +654,7 @@ public class AdmiralAckbar extends SingleAgent {
 	} else {
 	    PropiedadesDrone propiedades = flota.get(droneElegido);
 	    if (propiedades.getLlegado()) {
-		if (moverUnaCasilla && dronesEnObjetivo < flota.size() - 1) {
+		if (moverUnaCasilla && dronesEnObjetivo < flota.size() - 1 && propiedades.getBateria() > propiedades.getRol().getConsumo()) {
 		    moverUnaCasilla = false;
 		    if (propiedades.getRol() == Rol.MOSCA) {
 			moverMosca();
@@ -743,6 +762,8 @@ public class AdmiralAckbar extends SingleAgent {
 		writer.newLine();
 		writer.write("Llegado: " + value.getLlegado());
 		writer.newLine();
+		writer.write("Bateria: " + value.getBateria());
+		writer.newLine();
 		writer.newLine();
 	    }
 	} catch (Exception ex) {
@@ -828,7 +849,7 @@ public class AdmiralAckbar extends SingleAgent {
      */
     boolean primero = true;
 
-    private void generarPuntoObjetivo() {
+    private void generarPuntoObjetivo2() {
 //	System.out.println("\t\tPASOS: " + pasos + " maximos " + pasosMaximos + " cerca: " + cercaPuntoObjetivo());
 	if (pasos >= pasosMaximos || cercaPuntoObjetivo()) {
 	    puntoObjetivo = new Point();
@@ -839,15 +860,16 @@ public class AdmiralAckbar extends SingleAgent {
 	    if (p.x < tamanoMapa / 2) {
 		puntoObjetivo.x += tamanoMapa / 2;
 	    }
-	    p.y = random.nextInt(tamanoMapa);
-//	    if (p.y == 0) {
-//		puntoObjetivo.y = tamanoMapa - 1;
-//	    } else {
-//		puntoObjetivo.y = 0;
-//	    }
+//	    p.y = random.nextInt(tamanoMapa);
+	    if (p.y < tamanoMapa / 2) {
+		puntoObjetivo.y = tamanoMapa - 1;
+	    } else {
+		puntoObjetivo.y = 0;
+	    }
 	    if (primero) {
-		puntoObjetivo.x = 5;
-		puntoObjetivo.y = 5;
+		puntoObjetivo.x = tamanoMapa / 2;
+		puntoObjetivo.y = tamanoMapa / 2;
+//		puntoObjetivo.x = p.x;
 		primero = false;
 	    }
 	    pasosMaximos = (int) distancia(p, puntoObjetivo) * 2;
@@ -857,6 +879,36 @@ public class AdmiralAckbar extends SingleAgent {
 	    generarScanner();
 	}
 
+    }
+
+    private void generarPuntoObjetivo() {
+	if (pasos >= pasosMaximos || cercaPuntoObjetivo()) {
+
+	    Point p = flota.get(droneElegido).getGps();
+	    if (primero) {
+		int x = (int) (Math.random() * (tamanoMapa / 10));
+		int y = (int) (Math.random() * (tamanoMapa / 10));
+		puntoObjetivo.x = tamanoMapa / 2 - x;
+		puntoObjetivo.y = tamanoMapa / 2 + y;
+		primero = false;
+	    } else {
+		double calorMax = generarMapaCalor();
+		ArrayList<Point> puntos = new ArrayList<>();
+		for (int i = 0; i < tamanoMapa; i++) {
+		    for (int j = 0; j < tamanoMapa; j++) {
+			if (Math.abs(calorMax - calor[i][j]) < 1) {
+			    puntos.add(new Point(i, j));
+			}
+		    }
+		}
+		puntoObjetivo = puntos.get((int) Math.random() * puntos.size());
+	    }
+	    pasos = 0;
+	    pasosMaximos = (int) distancia(p, puntoObjetivo) * 2;
+	    System.out.println("\n\t\tpunto objetivo: " + puntoObjetivo.toString());
+	    System.out.println("");
+	    generarScanner();
+	}
     }
 
     private double distancia(Point a, Point b) {
@@ -883,5 +935,117 @@ public class AdmiralAckbar extends SingleAgent {
 //	    System.out.println("");
 //	}
 //	estadoActual = Estado.FINALIZAR;
+    }
+
+    private double generarMapaCalor2() {
+	double disMin;
+	double dis;
+	double disMax = Float.MIN_VALUE;
+	System.out.println("Generando mapa de calor");
+	for (int f = 0; f < tamanoMapa; f++) { // recorro filas
+	    for (int c = 0; c < tamanoMapa; c++) { // recorro columnas
+		if (mapa[f][c] == Celda.OBSTACULO || mapa[f][c] == Celda.PARED) { // si es pared no ir jamás de los jamases
+		    calor[f][c] = -1;
+		} else { // si no, buscar la que esté más lejos de una libre
+		    disMin = Float.MAX_VALUE;
+		    for (int ff = 0; ff < tamanoMapa; ff++) { // recorro filas
+			for (int cc = 0; cc < tamanoMapa; cc++) { // recorro columnas
+			    if (mapa[ff][cc] != Celda.DESCONOCIDA) { // si está descubierta
+				dis = distancia(new Point(f, c), new Point(ff, cc));
+				if (dis < disMin) { // si la distancia es menor que la almacenada: actualizar
+				    disMin = dis;
+				}
+			    }
+			}
+		    }
+		    calor[f][c] = disMin;
+		    if (calor[f][c] > disMax) {
+			disMax = calor[f][c];
+		    }
+		}
+	    }
+	}
+	System.out.println("Mapa de calor generado");
+	return disMax;
+    }
+
+    private double generarMapaCalor() {
+	double disMin;
+	double dis;
+	double disMax = Float.MIN_VALUE;
+	System.out.println("Generando mapa de calor");
+	for (int f = 0; f < tamanoMapa; f++) { // recorro filas
+	    for (int c = 0; c < tamanoMapa; c++) { // recorro columnas
+		if (mapa[f][c] != Celda.DESCONOCIDA) { // si es pared no ir jamás de los jamases
+		    calor[f][c] = -1;
+		} else { // si no, buscar la que esté más lejos de una libre
+		    disMin = Float.MAX_VALUE;
+		    for (int ff = 0; ff < tamanoMapa; ff++) { // recorro filas
+			for (int cc = 0; cc < tamanoMapa; cc++) { // recorro columnas
+			    if (mapa[ff][cc] != Celda.DESCONOCIDA) { // si está descubierta
+				dis = distancia(new Point(f, c), new Point(ff, cc));
+				if (dis < disMin) { // si la distancia es menor que la almacenada: actualizar
+				    disMin = dis;
+				}
+			    }
+			}
+		    }
+		    calor[f][c] = disMin;
+		    if (calor[f][c] > disMax) {
+			disMax = calor[f][c];
+		    }
+		}
+	    }
+	}
+	System.out.println("Mapa de calor generado");
+	return disMax;
+    }
+
+    private double generarMapaCalor3() {
+	double disMin;
+	double dis;
+	double disMax = Float.MIN_VALUE;
+	boolean encontrado;
+	System.out.println("Generando mapa de calor");
+	for (int f = 0; f < tamanoMapa; f++) { // recorro filas
+	    for (int c = 0; c < tamanoMapa; c++) { // recorro columnas
+		if (mapa[f][c] != Celda.DESCONOCIDA) { // si es pared no ir jamás de los jamases
+		    calor[f][c] = -1;
+		} else { // si no, buscar la que esté más lejos de una libre
+		    disMin = Float.MAX_VALUE;
+		    encontrado = false;
+		    for (int i = 1; i < tamanoMapa && !encontrado; i++) {
+			for (int ff = f - i; ff <= f + i; ff = f + i) { // recorro filas
+			    for (int cc = c - i; cc <= c + i; cc++) { // recorro columnas
+				if (ff >= 0 && ff < tamanoMapa && cc >= 0 && cc < tamanoMapa && mapa[ff][cc] != Celda.DESCONOCIDA) { // si está descubierta
+				    encontrado = true;
+				    dis = distancia(new Point(f, c), new Point(ff, cc));
+				    if (dis < disMin) { // si la distancia es menor que la almacenada: actualizar
+					disMin = dis;
+				    }
+				}
+			    }
+			}
+			for (int cc = c - i; cc <= c + i; cc = c + i) { // recorro columnas
+			    for (int ff = f - i; ff <= f + i; ff++) { // recorro filas
+				if (ff >= 0 && ff < tamanoMapa && cc >= 0 && cc < tamanoMapa && mapa[ff][cc] != Celda.DESCONOCIDA) { // si está descubierta
+				    encontrado = true;
+				    dis = distancia(new Point(f, c), new Point(ff, cc));
+				    if (dis < disMin) { // si la distancia es menor que la almacenada: actualizar
+					disMin = dis;
+				    }
+				}
+			    }
+			}
+		    }
+		    calor[f][c] = disMin;
+		    if (calor[f][c] > disMax) {
+			disMax = calor[f][c];
+		    }
+		}
+	    }
+	}
+	System.out.println("Mapa de calor generado");
+	return disMax;
     }
 }
