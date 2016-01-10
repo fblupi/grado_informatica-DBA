@@ -462,8 +462,7 @@ public class AdmiralAckbar extends SingleAgent {
     private void faseRepostar() {
 	PropiedadesDrone propiedades = flota.get(droneElegido);
 	if (!propiedades.getLlegado()) {
-	    System.out.println("\t\tDistancia posicionActual-Objetivo: " + Math.ceil(distancia(propiedades.getGps(), puntoObjetivo)));
-	    if (propiedades.getRol() == Rol.MOSCA && Math.ceil(distancia(propiedades.getGps(), puntoObjetivo)) == 100) {
+	    if (Math.ceil(distancia(propiedades.getGps(), puntoObjetivo))*propiedades.getRol().getConsumo() == 100) {
 		enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
 		try {
 		    ACLMessage message = receiveACLMessage();
