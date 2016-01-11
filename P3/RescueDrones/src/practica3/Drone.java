@@ -4,6 +4,11 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 
+/**
+ *
+ * @author Amanda Fernandez Piedra
+ * @author Francisco Javier Ortega Palacios
+ */
 public class Drone extends SingleAgent {
 
     private final String NOMBRE_CONTROLADOR = "Ackbar_";
@@ -22,29 +27,30 @@ public class Drone extends SingleAgent {
 	outbox = null;
 	terminar = false;
     }
+
     /**
-     * @author Amanda Fernández Piedra y Francisco Javier Ortega Palacios
+     *
      * Método execute de los drones zombies
      */
     public void execute() {
-        while(!terminar){
-            try {
-                inbox = receiveACLMessage();
+	while (!terminar) {
+	    try {
+		inbox = receiveACLMessage();
 //                System.out.println(getName() + " ha recibido: " + inbox.getContent());
-                if(inbox.getPerformativeInt()==ACLMessage.CANCEL){
-                    terminar = true;
-                }else{
-                    if(inbox.getSender().name.equals(NOMBRE_SERVIDOR)){
-                        receptor = NOMBRE_CONTROLADOR;
-                    }else{
-                        receptor = NOMBRE_SERVIDOR;
-                    }
-                    enviar(receptor,inbox.getPerformativeInt(),inbox.getContent());
-                }
-            } catch (InterruptedException ex) {
-                System.err.println("Agente Error de comunicación");
-            }
-        }
+		if (inbox.getPerformativeInt() == ACLMessage.CANCEL) {
+		    terminar = true;
+		} else {
+		    if (inbox.getSender().name.equals(NOMBRE_SERVIDOR)) {
+			receptor = NOMBRE_CONTROLADOR;
+		    } else {
+			receptor = NOMBRE_SERVIDOR;
+		    }
+		    enviar(receptor, inbox.getPerformativeInt(), inbox.getContent());
+		}
+	    } catch (InterruptedException ex) {
+		System.err.println("Agente Error de comunicación");
+	    }
+	}
     }
 
     public void finalize() {
@@ -55,9 +61,9 @@ public class Drone extends SingleAgent {
 	outbox = new ACLMessage();
 	outbox.setSender(this.getAid());
 	outbox.setReceiver(new AgentID(receptor));
-        outbox.setPerformative(performativa);
+	outbox.setPerformative(performativa);
 	outbox.setContent(contenido);
 //	System.out.println(getName() + ": enviando mensaje a " + receptor + " tipo " + outbox.getPerformative() + " contenido " + contenido);
-        this.send(outbox);   
+	this.send(outbox);
     }
 }

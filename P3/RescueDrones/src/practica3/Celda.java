@@ -1,5 +1,9 @@
 package practica3;
 
+/**
+ * 
+ * @author José Guadix Rosado
+ */
 public enum Celda {
 
     LIBRE, OBSTACULO, PARED, OBJETIVO, RECORRIDO0, RECORRIDO1, RECORRIDO2, RECORRIDO3,

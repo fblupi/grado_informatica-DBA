@@ -3,8 +3,10 @@ package practica3;
 import java.awt.Point;
 
 /**
- * @author Amanda Fernández Piedra, Francisco Javier Ortega Palacios
  * Contenedor de la información que tiene el controlador sobre un dron
+ *
+ * @author Amanda Fernandez Piedra
+ * @author Francisco Javier Ortega Palacios
  */
 public class PropiedadesDrone {
 
@@ -12,8 +14,7 @@ public class PropiedadesDrone {
     private int bateria;
     private boolean llegado;
     private Rol rol;
-    
-    
+
     public PropiedadesDrone() {
 	super();
     }
@@ -54,9 +55,14 @@ public class PropiedadesDrone {
 	this.rol = Rol.getRol(id);
     }
 
+    /**
+     * Actualiza todos los parametros a partir de una percepción
+     * 
+     * @param percepcion percepción con los datos a actualizar
+     */
     public void actualizarPercepcion(Percepcion percepcion) {
 	gps = percepcion.getGps();
-        bateria = percepcion.getBateria();
-        llegado = percepcion.getLlegado();
+	bateria = percepcion.getBateria();
+	llegado = percepcion.getLlegado();
     }
 }

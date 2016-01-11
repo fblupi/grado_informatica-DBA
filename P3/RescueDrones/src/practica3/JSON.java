@@ -121,7 +121,6 @@ public class JSON {
 	percepcion.setRadar(radar);
 	percepcion.setEnergia(result.getInt("energy", -1));
 	percepcion.setLlegado(radar[radar.length/2][radar.length/2] == 3);
-//	percepcion.setLlegado(result.getBoolean("goal", false));
 	return percepcion;
     }
     

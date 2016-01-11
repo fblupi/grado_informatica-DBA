@@ -11,7 +11,8 @@ import javax.swing.JLabel;
 
 /**
  *
- * @author Antonio Espinosa
+ * @author Antonio Espinosa Jimenez
+ * @author José Guadix Rosado
  */
 public class Imagen extends JFrame {
 
@@ -24,6 +25,7 @@ public class Imagen extends JFrame {
      *
      * @param mapa
      * @param mundo
+     * @author Antonio Espinosa Jimenez
      */
     public Imagen(Celda[][] mapa, String mundo) {
 	initComponents();
@@ -39,6 +41,8 @@ public class Imagen extends JFrame {
 
     /**
      * Inicializamos los componentes de nuestra ventana
+     * 
+     * @author Antonio Espinosa Jimenez
      */
     private void initComponents() {
 	labelMapa = new javax.swing.JLabel();
@@ -62,6 +66,9 @@ public class Imagen extends JFrame {
      * Pintamos el mapa pasado como parametro
      *
      * @param mapa mapa a pintar
+     * 
+     * @author Antonio Espinosa Jimenez
+     * @author José Guadix Rosado
      */
     private void pintarMapa(Celda[][] mapa) {
 	Color color;
@@ -112,6 +119,8 @@ public class Imagen extends JFrame {
 
     /**
      * Nos hace visible la ventana
+     * 
+     * @author Antonio Espinosa Jimenez
      */
     public void mostar() {
 	setVisible(true);
@@ -119,6 +128,8 @@ public class Imagen extends JFrame {
 
     /**
      * Método para cerrar nuestra ventana
+     * 
+     * @author Antonio Espinosa Jimenez
      */
     public void cerrar() {
 	dispose();
@@ -128,6 +139,8 @@ public class Imagen extends JFrame {
      * Método que actualiza el mapa pasado como parametro
      *
      * @param mapa mapa a actualizar
+     * 
+     * @author Antonio Espinosa Jimenez
      */
     public void actualizarMapa(Celda[][] mapa) {
 	pintarMapa(mapa);
@@ -138,6 +151,8 @@ public class Imagen extends JFrame {
      * Método que guarda el mapa en un fichero png
      *
      * @param nombre del fichero en el que se guardara la imagen
+     * 
+     * @author Antonio Espinosa Jimenez
      */
     public void guardarPNG(String nombre) {
 	try {

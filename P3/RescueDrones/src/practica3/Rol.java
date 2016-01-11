@@ -1,5 +1,9 @@
 package practica3;
 
+/**
+ * 
+ * @author Antonio David Lopez Machado
+ */
 public enum Rol {
 
     MOSCA(0, 2, 0), PAJARO(1, 1, 1), HALCON(2, 4, 2);

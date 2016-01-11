@@ -1,10 +1,12 @@
 package practica3;
 
 import java.awt.Point;
+
 /**
- * 
- * @author Amanda Fernández Piedra y Francisco Javier Ortega Palacios
  * Clase contenedora de la información sobre el mundo que recibe un dron
+ *
+ * @author Amanda Fernandez Piedra
+ * @author Francisco Javier Ortega Palacios
  */
 public class Percepcion {
 
