@@ -17,6 +17,11 @@ public enum Rol {
 	prioridad=prio;
     }
 
+    /**
+     * Obtiene el rol que contiene un id concreto
+     * @param id Identificación del rol
+     * @return El rol identificado
+     */
     public static Rol getRol(int id) {
         
         for (Rol col : Rol.values()) {

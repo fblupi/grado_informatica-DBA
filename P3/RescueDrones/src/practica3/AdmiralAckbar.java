@@ -12,7 +12,6 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 /**
  *
@@ -45,6 +44,7 @@ public class AdmiralAckbar extends SingleAgent {
     private Point posicionAnterior = new Point(50, 50);
     private boolean moverUnaCasilla = true;
     private int dronesEnObjetivo = 0;
+    private boolean primero = true;
 
     public AdmiralAckbar(AgentID id, String mundoAVisitar) throws Exception {
 	super(id);
@@ -143,10 +143,11 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Envia un mensaje
      *
-     * @param receptor
-     * @param performativa
-     * @param contenido
+     * @param receptor Nombre del agente
+     * @param performativa Performativa
+     * @param contenido Cadena a enviar
      * @author José Guadix
      */
     private void enviarMensaje(String receptor, int performativa, String contenido) {
@@ -160,6 +161,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Inicializa el mapa a desconocida
+     *
      * @author José Guadix
      */
     private void inicializarMapa() {
@@ -171,6 +174,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Inicializa la conversación con el servidor y los drones
+     *
      * @author José Guadix
      */
     private void iniciarConversacion() {
@@ -201,6 +206,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Inicializa las propiedades de cada dron
+     *
      * @author José Guadix
      */
     private void inicializarPropiedadesDrone() {
@@ -237,6 +244,13 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * Actualiza el mapa a partir de una percepción
+     *
+     * @param percepcion Percepción a partir de la que actualiza el mapa
+     *
+     * @author José Guadix Rosado
+     */
     private void actualizarMapa(Percepcion percepcion) {
 	int posX = percepcion.getGps().x;
 	int posY = percepcion.getGps().y;
@@ -275,16 +289,13 @@ public class AdmiralAckbar extends SingleAgent {
 	Point posActual = flota.get(droneElegido).getGps();
 	int posX = posActual.x;
 	int posY = posActual.y;
-//	System.out.println("\t\t\tPosicion actual: " + posActual.toString());
 	for (int x = posX - 1; x <= posX + 1; x++) {
 	    for (int y = posY - 1; y <= posY + 1; y++) {
 
 		if (x >= 0 && x < TAMANO_MAPA && y >= 0 && y < TAMANO_MAPA) {
-//		    System.out.print(mapa[x][y]);
 		    if (mapa[x][y] != Celda.OBSTACULO && mapa[x][y] != Celda.PARED && mapa[x][y] != Celda.getRecorrido(droneElegido) && celdaLibre(x, y)
 			    && (x != posicionAnterior.x || y != posicionAnterior.y)) {
 			decisionLocal = parserCoordMov(x - posX, y - posY);
-//			System.out.print(" -> " + decisionLocal);
 			if (scanner[x][y] <= distanciaNormal) {
 			    decisionNormal = decisionLocal;
 			    distanciaNormal = scanner[x][y];
@@ -294,10 +305,8 @@ public class AdmiralAckbar extends SingleAgent {
 			    distanciaPared = scanner[x][y]; // Actualiza la distancia de la casilla más cercana
 			}
 		    }
-//		    System.out.println("");
 		}
 	    }
-//	    System.out.println("");
 	}
 
 	if (moviendoPorPared) {
@@ -313,10 +322,11 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Calcula si una casilla tiene una casilla con un obtaculo en su 3x3
      *
-     * @param x
-     * @param y
-     * @return
+     * @param x Posición x del mapa
+     * @param y Posición y del mapa
+     * @return true si hay al menos una pared cerca y false en caso contrario
      *
      * @author Francisco Javier Bolívar
      * @author Antonio David López
@@ -370,6 +380,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Implementación del Estado Inicial
+     *
      * @author José Guadix
      */
     private void faseInicial() {
@@ -386,10 +398,12 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Implementación del Estado Elección de Dron
      *
      * @author José Guadix
      */
     private void faseEleccionDrone() {
+	pasos = 0;
 	if (buscando) {
 	    int prioridadMax = -1;
 	    int distanciaMin = Integer.MAX_VALUE, x, distancia;
@@ -404,13 +418,13 @@ public class AdmiralAckbar extends SingleAgent {
 		    distanciaMin = 0;
 		    prioridadMax = propiedades.getRol().getPrioridad();
 		    droneElegido = nombre;
-		} else if (propiedades.getRol().getPrioridad() == prioridadMax && propiedades.getBateria()>propiedades.getRol().getConsumo()) {
+		} else if (propiedades.getRol().getPrioridad() == prioridadMax && propiedades.getBateria() > propiedades.getRol().getConsumo()) {
 		    if (distancia < distanciaMin) {
 			distanciaMin = distancia;
 			prioridadMax = propiedades.getRol().getPrioridad();
 			droneElegido = nombre;
 		    }
-		} else if (propiedades.getRol().getPrioridad() > prioridadMax && propiedades.getBateria()>propiedades.getRol().getConsumo()) {
+		} else if (propiedades.getRol().getPrioridad() > prioridadMax && propiedades.getBateria() > propiedades.getRol().getConsumo()) {
 		    distanciaMin = distancia;
 		    prioridadMax = propiedades.getRol().getPrioridad();
 		    droneElegido = nombre;
@@ -431,10 +445,12 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Obtiene el nombre del dron más cercano al objetivo con un rol específico
      *
-     * @param distancias
-     * @param rol
-     * @return
+     * @param distancias Distancias desde dicho dron al objetivo
+     * @param rol Rol que tiene que tener el dron a elegir
+     * @return El nombre del dron elegido o la cadena vacía ("") en caso de no
+     * encontrarlo
      *
      * @author José Guadix
      */
@@ -446,7 +462,7 @@ public class AdmiralAckbar extends SingleAgent {
 	    String nombre = entrySet.getKey();
 	    Double distancia = entrySet.getValue();
 	    propiedades = flota.get(nombre);
-	    if (!propiedades.getLlegado() && propiedades.getRol() == rol && distanciaMin > distancia && propiedades.getBateria()>propiedades.getRol().getConsumo()) {
+	    if (!propiedades.getLlegado() && propiedades.getRol() == rol && distanciaMin > distancia && propiedades.getBateria() > propiedades.getRol().getConsumo()) {
 		elegido = nombre;
 		distanciaMin = distancia;
 	    }
@@ -455,8 +471,9 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Calcula las distancias de todos los drones al objetivo
      *
-     * @return
+     * @return Las distancias en pares (nombre_dron, distancia)
      *
      * @author José Guadix
      */
@@ -473,6 +490,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Implementación del Estado Percibir
+     *
      * @author Amanda Fernandez Piedra
      * @author Francisco Javier Ortega Palacios
      */
@@ -499,6 +518,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Implementación del Estado Repostar
+     *
      * @author Antonio David Lopez Machado
      */
     private void faseRepostar() {
@@ -512,12 +533,12 @@ public class AdmiralAckbar extends SingleAgent {
 		    ACLMessage message = receiveACLMessage();
 		    if (message.getPerformativeInt() != ACLMessage.INFORM) {
 			System.out.println(message.getPerformative() + ": " + message.getContent());
-			estadoActual = Estado.FINALIZAR;
+			subEstadoBuscando = Estado.ELECCION_DRONE;
+			subEstadoEncontrado = Estado.ELECCION_DRONE;
 		    }
 		} catch (InterruptedException ex) {
 		    System.err.println(ex.toString());
-		    subEstadoBuscando = Estado.ELECCION_DRONE;
-		    subEstadoEncontrado = Estado.ELECCION_DRONE;
+		    estadoActual = Estado.FINALIZAR;
 		}
 	    } else if (propiedades.getBateria() <= propiedades.getRol().getConsumo()) {
 		enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.repostar());
@@ -537,6 +558,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Mueve el dron a la posición más optima para llegar al objetivo
+     *
      * @author Antonio Espinosa
      */
     private void mover() {
@@ -565,7 +588,8 @@ public class AdmiralAckbar extends SingleAgent {
 	pasos++;
 	if (decision.equals("logout")) {
 	    System.out.println("No se donde moverme.");
-	    estadoActual = Estado.FINALIZAR;
+	    subEstadoBuscando = Estado.ELECCION_DRONE;
+	    subEstadoEncontrado = Estado.ELECCION_DRONE;
 	} else {
 	    enviarMensaje(droneElegido, ACLMessage.REQUEST, JSON.mover(decision));
 	    subEstadoBuscando = Estado.PERCIBIR;
@@ -574,7 +598,8 @@ public class AdmiralAckbar extends SingleAgent {
 		ACLMessage message = receiveACLMessage();
 		if (message.getPerformativeInt() != ACLMessage.INFORM) {
 		    System.out.println(message.getPerformative() + ": " + message.getContent());
-		    estadoActual = Estado.FINALIZAR;
+		    subEstadoBuscando = Estado.ELECCION_DRONE;
+		    subEstadoEncontrado = Estado.ELECCION_DRONE;
 		} else {
 		    System.out.println("Mensaje recibido: " + message.getContent());
 		}
@@ -587,6 +612,9 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Mueve el dron a la posición más optima para llegar al objetivo sin tener
+     * en cuenta los obtaculos
+     *
      * @author Amanda Fernandez Piedra
      */
     private void moverMosca() {
@@ -617,7 +645,8 @@ public class AdmiralAckbar extends SingleAgent {
 	    ACLMessage message = receiveACLMessage();
 	    if (message.getPerformativeInt() != ACLMessage.INFORM) {
 		System.out.println(message.getPerformative() + ": " + message.getContent());
-		estadoActual = Estado.FINALIZAR;
+		subEstadoBuscando = Estado.ELECCION_DRONE;
+		subEstadoEncontrado = Estado.ELECCION_DRONE;
 	    } else {
 		System.out.println("Mensaje recibido: " + message.getContent());
 	    }
@@ -628,6 +657,8 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
+     * Implementación del Estado Mover
+     *
      * @author Francisco Javier Bolivar Lupiañez
      * @author Antonio Espinosa Jimenez
      * @author Amanda Fernandez Piedra
@@ -664,6 +695,17 @@ public class AdmiralAckbar extends SingleAgent {
 	posicionAnterior = flota.get(droneElegido).getGps();
     }
 
+    /**
+     * Devuelve si en una casilla está situado otro dron
+     *
+     * @param x Posición x del mapa
+     * @param y Posición y del mapa
+     * @return true en caso de que no hayan drones en esa casilla y false en
+     * caso contrario
+     *
+     * @author José Guadix Rosado
+     * @author Francisco Javier Ortega Palacios
+     */
     private boolean celdaLibre(int x, int y) {
 	for (PropiedadesDrone propiedades : flota.values()) {
 	    if (propiedades.getGps().x == x && propiedades.getGps().y == y) {
@@ -676,8 +718,9 @@ public class AdmiralAckbar extends SingleAgent {
     /**
      * Busca en nuestro mapa 3x3 cual es la posición mas óptima de movimiento
      *
-     * @author Antonio Espinosa
      * @return La posición optima de movimiento
+     *
+     * @author Antonio Espinosa
      */
     private int[] posicionOptima() {
 	int[] optima = new int[2];
@@ -700,11 +743,12 @@ public class AdmiralAckbar extends SingleAgent {
     }
 
     /**
-     * Nos indica si la posición pasada es pared o si no lo es
+     * Nos indica si una posición concreta es un obstaculo o no
+     *
+     * @param pos posición de nuestro mapa
+     * @return true si la posición que te pasa es obstaculo false si no lo es
      *
      * @author Antonio Espinosa
-     * @param pos posición de nuestro mapa
-     * @return True si la posición que te pasa es pared false si no lo es
      */
     private boolean optimaEsPared(int[] pos) {
 	int x = flota.get(droneElegido).getGps().x;
@@ -713,6 +757,9 @@ public class AdmiralAckbar extends SingleAgent {
 	return mapa[x + pos[0]][y + pos[1]] == Celda.OBSTACULO;
     }
 
+    /**
+     * Implementación del Subestado Objetivo Encontrado
+     */
     private void faseObjetivoEncontrado() {
 	if (buscando) {
 	    buscando = false;
@@ -720,10 +767,16 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * Implementación del Estado Finalizar
+     */
     private void faseFinalizar() {
 	terminar = true;
     }
 
+    /**
+     * Finaliza la conversación con el servidor y con los drones.
+     */
     private void finalizarConversacion() {
 	String contenido = JSON.key();
 	for (String string : flota.keySet()) {
@@ -732,6 +785,9 @@ public class AdmiralAckbar extends SingleAgent {
 	enviarMensaje(NOMBRE_CONTROLADOR, ACLMessage.CANCEL, contenido);
     }
 
+    /**
+     * Guarda en un archivo los tipos de drones y el estado final
+     */
     private void guardarLog() {
 	File file = new File("seguimiento");
 	if (!file.exists()) {
@@ -766,6 +822,9 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * Guarda la imagen del mapa en el estado actual
+     */
     private void guardarImagen() {
 	for (Map.Entry<String, PropiedadesDrone> par : flota.entrySet()) { //Cambia el color de la ultima posición si no ha llegado
 	    String key = par.getKey();
@@ -774,6 +833,7 @@ public class AdmiralAckbar extends SingleAgent {
 		mapa[value.getGps().x][value.getGps().y] = Celda.getUlt_Posicion(key);
 	    }
 	}
+	imagen.actualizarMapa(mapa);
 	imagen.guardarPNG("seguimiento/" + mundoAVisitar + " - " + JSON.getKey() + ".png");
 	imagen.cerrar();
     }
@@ -781,8 +841,9 @@ public class AdmiralAckbar extends SingleAgent {
     /**
      * Comprueba si se ha encontrado el objetivo en el mapa global
      *
-     * @author Francisco Javier Bolívar
      * @return punto donde se encuentra el objetivo, null si no lo encuentra
+     *
+     * @author Francisco Javier Bolívar
      */
     private void objetivoEncontrado() {
 	boolean encontrado = false;
@@ -813,18 +874,16 @@ public class AdmiralAckbar extends SingleAgent {
 	    generarScanner();
 	    subEstadoBuscando = Estado.OBJETIVO_ENCONTRADO;
 	}
-//	for (int i = 0; i < TAMANO_MAPA && !encontrado; i++) {
-//	    for (int j = 0; j < TAMANO_MAPA && !encontrado; j++) {
-//		if (mapa[j][i] == Celda.OBJETIVO) {
-//		    puntoObjetivo = new Point(j, i);
-//		    generarScanner();
-//		    encontrado = true;
-//		    subEstadoBuscando = Estado.OBJETIVO_ENCONTRADO;
-//		}
-//	    }
-//	}
     }
 
+    /**
+     * Devuelve si un dron está cerca del punto objetivo
+     *
+     * @return true en caso de que la distancia sea menor o igual a 3 y false en
+     * caso contrario
+     *
+     * @author Antonio David López Machado
+     */
     private boolean cercaPuntoObjetivo() {
 	return distancia(flota.get(droneElegido).getGps(), puntoObjetivo) <= 3;
     }
@@ -834,40 +893,6 @@ public class AdmiralAckbar extends SingleAgent {
      *
      * @author Antonio David López Machado
      */
-    boolean primero = true;
-
-    private void generarPuntoObjetivo2() {
-//	System.out.println("\t\tPASOS: " + pasos + " maximos " + pasosMaximos + " cerca: " + cercaPuntoObjetivo());
-	if (pasos >= pasosMaximos || cercaPuntoObjetivo()) {
-	    puntoObjetivo = new Point();
-	    Point p = flota.get(droneElegido).getGps();
-	    pasos = 0;
-	    Random random = new Random();
-//	    puntoObjetivo.x = random.nextInt(tamanoMapa);
-	    if (p.x < tamanoMapa / 2) {
-		puntoObjetivo.x += tamanoMapa / 2;
-	    }
-//	    p.y = random.nextInt(tamanoMapa);
-	    if (p.y < tamanoMapa / 2) {
-		puntoObjetivo.y = tamanoMapa - 1;
-	    } else {
-		puntoObjetivo.y = 0;
-	    }
-	    if (primero) {
-		puntoObjetivo.x = tamanoMapa / 2;
-		puntoObjetivo.y = tamanoMapa / 2;
-//		puntoObjetivo.x = p.x;
-		primero = false;
-	    }
-	    pasosMaximos = (int) distancia(p, puntoObjetivo) * 2;
-	    // generas un punto q sea tamanoMapa - posX, tamanoMapa - posY
-	    //llamas a la funcion generar scanner
-//	    System.out.println("\t\tPuntoObjetivo: " + puntoObjetivo.toString() + " pasos maximos: " + pasosMaximos);
-	    generarScanner();
-	}
-
-    }
-
     private void generarPuntoObjetivo() {
 	if (pasos >= pasosMaximos || cercaPuntoObjetivo()) {
 
@@ -889,6 +914,7 @@ public class AdmiralAckbar extends SingleAgent {
 		    }
 		}
 		puntoObjetivo = puntos.get((int) Math.random() * puntos.size());
+		moviendoPorPared = false;
 	    }
 	    pasos = 0;
 	    pasosMaximos = (int) distancia(p, puntoObjetivo) * 2;
@@ -898,6 +924,15 @@ public class AdmiralAckbar extends SingleAgent {
 	}
     }
 
+    /**
+     * Calcula la distancia entre dos puntos
+     *
+     * @param a Punto a
+     * @param b Punto b
+     * @return Distancia entre el punto a y b
+     *
+     * @author Amanda Fernandez Piedra
+     */
     private double distancia(Point a, Point b) {
 	return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
     }
@@ -915,15 +950,19 @@ public class AdmiralAckbar extends SingleAgent {
 		scanner[j][i] = distanciaAux;
 	    }
 	}
-//	for (int i = 0; i < TAMANO_MAPA; i++) {
-//	    for (int j = 0; j < TAMANO_MAPA; j++) {
-//		System.out.print(scanner[i][j] + " ");
-//	    }
-//	    System.out.println("");
-//	}
-//	estadoActual = Estado.FINALIZAR;
     }
 
+    /**
+     * Genera el mapa de calor
+     *
+     * @return El valor más alto del mapa
+     *
+     * @author Francisco Javier Bolivar Lupiañez
+     * @author Antonio Espinosa Jimenez
+     * @author José Guadix Rosado
+     * @author Antonio David Lopez Machado
+     * @author Francisco Javier Ortega Palacios
+     */
     private double generarMapaCalor() {
 	double disMin;
 	double dis;
