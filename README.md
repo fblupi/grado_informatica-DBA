@@ -6,8 +6,13 @@
 
 ### Índice
 
-* Práctica 0: Toma de contacto con Magentix
-* Práctica 2: Rescue Bots
+* Práctica 0: [Toma de contacto con Magentix](https://github.com/fblupi/grado_informatica-DBA/tree/master/P0)
+  * [Hola Mundo](https://github.com/fblupi/grado_informatica-DBA/tree/master/P0/HolaMundo)
+  * [Dragon Ball](https://github.com/fblupi/grado_informatica-DBA/tree/master/P0/DragonBall)
+  * [The Matrix](https://github.com/fblupi/grado_informatica-DBA/tree/master/P0/TheMatrix)
+* Práctica 2: [Rescue Bot](https://github.com/fblupi/grado_informatica-DBA/tree/master/P2/RescueBot)
+* Práctica 3: [Rescue Bots](https://github.com/fblupi/grado_informatica-DBA/tree/master/P3)
+* Hackathon: [Juego del Ahorcado con Jake](https://github.com/fblupi/grado_informatica-DBA/tree/master/Hackathon)
 
 ### Requisitos
 
